@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify ID</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-4">
+        <h2>Verify ID (Number Theory)</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">School ID (2026-XXXX)</label>
+                <input type="text" class="form-control" name="school_id" placeholder="2026-0001" required>
+                <small class="text-muted">ID must be even (divisible by 2)</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Verify</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back</a>
+        </form>
+        
+        {% if result %}
+            <div class="alert alert-{{ 'success' if result.valid else 'danger' }} mt-3">
+                <h4>{{ '✅ VALID' if result.valid else '❌ INVALID' }}</h4>
+                <p>{{ result.message }}</p>
+                <p>ID: {{ result.school_id }}</p>
+                {% if result.valid %}
+                    <p><strong>Number Theory Applied:</strong> {{ result.school_id }} % 2 = 0 ✓</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

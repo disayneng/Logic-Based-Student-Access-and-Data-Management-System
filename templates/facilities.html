@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block title %}Facilities - Access Control System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="fw-bold"><i class="bi bi-building text-primary me-2"></i>Facilities</h2>
+        <p class="text-muted">View available facilities and their access status</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for facility in facilities %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title fw-bold mb-0">{{ facility.get_name() }}</h5>
+                        <span class="badge bg-{{ 'success' if facility.is_available() else 'secondary' }}">
+                            {{ 'Available' if facility.is_available() else 'Restricted' }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-light text-dark">{{ facility.get_type()|title }}</span>
+                        <span class="text-muted small">
+                            <i class="bi bi-people"></i> Capacity: {{ facility.get_capacity() }}
+                        </span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small">
+                            <i class="bi bi-shield-{{ 'check' if facility.is_available() else 'x' }}"></i>
+                            {{ 'Access Granted' if facility.is_available() else 'Access Denied' }}
+                        </span>
+                        <span class="badge bg-{{ 'success' if facility.is_available() else 'danger' }}">
+                            {{ 'Open' if facility.is_available() else 'Closed' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center py-5">
+                <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+                <h5>No facilities available</h5>
+                <p class="mb-0">Contact the administrator for access.</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
