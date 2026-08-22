@@ -594,17 +594,9 @@ class FiniteStateMachine:
 
 USER_DATA = [
     {"school_id": "2026-0001", "username": "alexa.cortes", "role": "Student", "full_name": "Alexa Cortes", "password": "Student@123"},
-    {"school_id": "2026-0002", "username": "john.smith", "role": "Student", "full_name": "John Smith", "password": "Student@456"},
     {"school_id": "2026-0003", "username": "maria.santos", "role": "Faculty", "full_name": "Maria Santos", "password": "Faculty@123"},
-    {"school_id": "2026-0004", "username": "david.reyes", "role": "Faculty", "full_name": "David Reyes", "password": "Faculty@456"},
     {"school_id": "2026-0005", "username": "anna.garcia", "role": "Staff", "full_name": "Anna Garcia", "password": "Staff@123"},
-    {"school_id": "2026-0006", "username": "robert.cruz", "role": "Staff", "full_name": "Robert Cruz", "password": "Staff@456"},
     {"school_id": "2026-0007", "username": "carlos.mendoza", "role": "Chairperson", "full_name": "Carlos Mendoza", "password": "Chair@123"},
-    {"school_id": "2026-0008", "username": "sophia.lopez", "role": "Chairperson", "full_name": "Sophia Lopez", "password": "Chair@456"},
-    {"school_id": "2026-0009", "username": "mark.johnson", "role": "Faculty", "full_name": "Mark Johnson", "password": "Faculty@789"},
-    {"school_id": "2026-0010", "username": "emily.wilson", "role": "Student", "full_name": "Emily Wilson", "password": "Student@789"},
-    {"school_id": "2026-0011", "username": "james.brown", "role": "Staff", "full_name": "James Brown", "password": "Staff@789"},
-    {"school_id": "2026-0012", "username": "lisa.anderson", "role": "Chairperson", "full_name": "Lisa Anderson", "password": "Chair@789"},
 ]
 
 ROOM_DATA = [
