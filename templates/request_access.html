@@ -9,61 +9,88 @@
     <div class="col-lg-8">
         <div class="card animate-in">
             <div class="card-header">
-                <i class="bi bi-pencil-square me-2" style="color: var(--accent-blue);"></i>Request Access to Facility
+                <i class="bi bi-pencil-square me-2"></i> Request Room/Facility Access
             </div>
             <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    {% if session.user_type == 'Student' %}
+                        Students can request access to rooms and facilities. Your request will be sent to the admin for approval.
+                    {% else %}
+                        As an admin ({{ session.user_type }}), you can request access to any room or facility for your work.
+                    {% endif %}
+                </div>
+
                 <form method="POST" action="{{ url_for('request_access_web') }}">
+                    <!-- Facility Selection -->
                     <div class="mb-3">
-                        <label for="facility" class="form-label">
-                            <i class="bi bi-building me-1"></i> Select Facility
-                        </label>
+                        <label for="facility" class="form-label">Select Room/Facility</label>
                         <select class="form-select" id="facility" name="facility" required>
-                            <option value="">Choose a facility...</option>
+                            <option value="">Select a room or facility...</option>
                             {% for facility in facilities %}
                             <option value="{{ facility }}">{{ facility }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
+                    <!-- Date -->
                     <div class="mb-3">
-                        <label for="date" class="form-label">
-                            <i class="bi bi-calendar me-1"></i> Date
-                        </label>
-                        <input type="date" class="form-control" id="date" name="date" required>
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" 
+                               min="{{ datetime.now().strftime('%Y-%m-%d') }}" required>
                     </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="start_hour" class="form-label">
-                                <i class="bi bi-clock me-1"></i> Start Time
-                            </label>
+                    <!-- Time Range -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="start_hour" class="form-label">Start Time</label>
                             <select class="form-select" id="start_hour" name="start_hour" required>
-                                <option value="">Select...</option>
-                                {% for hour in range(7, 20) %}
-                                <option value="{{ hour }}">{{ "%02d"|format(hour) }}:00</option>
+                                {% for hour in range(6, 22) %}
+                                <option value="{{ hour }}">{{ "%02d:00"|format(hour) }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label for="end_hour" class="form-label">
-                                <i class="bi bi-clock me-1"></i> End Time
-                            </label>
+                        <div class="col-md-6 mb-3">
+                            <label for="end_hour" class="form-label">End Time</label>
                             <select class="form-select" id="end_hour" name="end_hour" required>
-                                <option value="">Select...</option>
-                                {% for hour in range(8, 21) %}
-                                <option value="{{ hour }}">{{ "%02d"|format(hour) }}:00</option>
+                                {% for hour in range(7, 23) %}
+                                <option value="{{ hour }}">{{ "%02d:00"|format(hour) }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                     </div>
 
-                    <div class="mb-3 mt-3">
-                        <label for="purpose" class="form-label">
-                            <i class="bi bi-chat me-1"></i> Purpose
-                        </label>
+                    <!-- Purpose -->
+                    <div class="mb-3">
+                        <label for="purpose" class="form-label">Purpose</label>
                         <textarea class="form-control" id="purpose" name="purpose" rows="3" 
-                                  placeholder="Describe the purpose of your visit..." required></textarea>
+                                  placeholder="Please describe the purpose of your access request..." required></textarea>
                     </div>
+
+                    <!-- Request Type -->
+                    {% if session.user_type in ['Chairperson', 'Faculty', 'Staff'] %}
+                    <div class="mb-3">
+                        <label class="form-label">Request Type</label>
+                        <div class="card" style="background: var(--primary-dark); border: 1px solid var(--border-color);">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="request_type" id="type_individual" value="individual" checked>
+                                    <label class="form-check-label" for="type_individual">
+                                        <i class="bi bi-person me-1"></i> Individual Access
+                                        <small class="d-block text-secondary">Access for your personal use</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="radio" name="request_type" id="type_class" value="class">
+                                    <label class="form-check-label" for="type_class">
+                                        <i class="bi bi-people me-1"></i> Class/Group Access
+                                        <small class="d-block text-secondary">Access for a class or group activity</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="bi bi-send me-2"></i> Submit Request
@@ -72,30 +99,58 @@
             </div>
         </div>
 
-        <!-- Request Guidelines -->
-        <div class="card animate-in mt-4">
+        <!-- Your Requests -->
+        <div class="card mt-4 animate-in delay-2">
             <div class="card-header">
-                <i class="bi bi-info-circle me-2" style="color: var(--accent-yellow);"></i>Request Guidelines
+                <i class="bi bi-list-ul me-2"></i> Your Recent Requests
             </div>
             <div class="card-body">
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        Students can request access to any facility
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        Requests must be approved by Faculty/Chairperson
-                    </li>
-                    <li class="mb-2">
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        Maximum usage time is 2 hours per request
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle text-success me-2"></i>
-                        You will be notified when your request is approved
-                    </li>
-                </ul>
+                {% set user_requests = [] %}
+                {% for req in access_requests %}
+                    {% if req.username == session.username %}
+                        {% set _ = user_requests.append(req) %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if user_requests %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Facility</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in user_requests|reverse %}
+                            <tr>
+                                <td><small>{{ req.id }}</small></td>
+                                <td>{{ req.facility_name }}</td>
+                                <td>{{ req.date }}</td>
+                                <td>{{ req.start_hour }}:00 - {{ req.end_hour }}:00</td>
+                                <td>
+                                    {% if req.status == 'Pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% elif req.status == 'Approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                    {% elif req.status == 'Rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 2rem; color: var(--text-secondary);"></i>
+                    <p class="text-secondary mt-2">You have no access requests yet</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -103,17 +158,11 @@
 
 <script>
     // Set default date to today
-    document.getElementById('date').valueAsDate = new Date();
-    
-    // Validate end time is after start time
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const start = parseInt(document.getElementById('start_hour').value);
-        const end = parseInt(document.getElementById('end_hour').value);
-        
-        if (start && end && end <= start) {
-            e.preventDefault();
-            alert('End time must be after start time.');
-            return false;
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('date');
+        if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
         }
     });
 </script>

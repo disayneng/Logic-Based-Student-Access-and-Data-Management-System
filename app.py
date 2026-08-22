@@ -589,56 +589,148 @@ class FiniteStateMachine:
         self.state_history = []
 
 # =====================================================
+# PROGRAM OPTIONS FOR REGISTRATION
+# =====================================================
+
+PROGRAM_OPTIONS = {
+    "COLLEGE OF SCIENCE AND MANAGEMENT": [
+        ("BSCS", "BACHELOR OF SCIENCE IN COMPUTER SCIENCE"),
+        ("BSES", "BACHELOR OF SCIENCE IN ENVIRONMENTAL SCIENCE"),
+        ("BSHM", "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT"),
+    ],
+    "COLLEGE OF TEACHER EDUCATION": [
+        ("BEED", "BACHELOR OF EDUCATION IN ELEMENTARY EDUCATION"),
+        ("BSED-MATH", "BACHELOR OF SECONDARY EDUCATION - MAJOR IN MATHEMATICS"),
+        ("BTLED-HE", "BACHELOR OF TECHNOLOGICAL EDUCATION - MAJOR IN HOME ECONOMICS"),
+    ]
+}
+
+# =====================================================
+# ROOM PROGRAM MAPPING
+# =====================================================
+
+ROOM_PROGRAM_MAPPING = {
+    # CSM - College of Science and Management
+    "COMLAB 1": "BSCS",
+    "COMLAB 2": "BSCS",
+    "COMLAB 3": "BSCS",
+    "COMLAB 4": "BSCS",
+    "COMLEC 1": "BSCS",
+    "COMLEC 2": "BSCS",
+    "S&T LAB 1": "BSES",
+    "S&T LAB 2": "BSES",
+    "HOT KITCHEN": "BSHM",
+    "COLD KITCHEN": "BSHM",
+    "HM ROOM 1": "BSHM",
+    "HM ROOM 2": "BSHM",
+    "HM ROOM 3": "BSHM",
+    "HM ROOM 4": "BSHM",
+    "S&T LAB": "BSES",
+    # CTE - College of Teacher Education
+    "CTE ROOM 1": "BEED",
+    "CTE ROOM 2": "BEED",
+    "CTE ROOM 3": "BEED",
+    "CTE ROOM 4": "BEED",
+    "CTE ROOM 5": "BEED",
+    "CTE ROOM 6": "BEED",
+    "CTE ROOM 7": "BEED",
+    "CTE ROOM 8": "BEED",
+    "CTE LAB 1": "BSED-MATH",
+    "CTE LAB 2": "BSED-MATH",
+    "CTE LAB 3": "BTLED-HE",
+    "CTE LAB 4": "BTLED-HE",
+    "SPEECH LAB": "BEED",
+    # General
+    "ES ROOM 1": "BSES",
+    "ES ROOM 2": "BSES",
+    "ES ROOM 3": "BSES",
+    "ES ROOM 4": "BSES",
+    "ES ROOM 5": "BSES",
+    "CSM OFFICE": "CSM",
+    "CTE OFFICE": "CTE",
+}
+
+# =====================================================
 # DATA FROM PROVIDED TABLES
 # =====================================================
 
 USER_DATA = [
-    {"school_id": "2026-0001", "username": "alexa.cortes", "role": "Student", "full_name": "Alexa Cortes", "password": "Student@123"},
-    {"school_id": "2026-0003", "username": "maria.santos", "role": "Faculty", "full_name": "Maria Santos", "password": "Faculty@123"},
-    {"school_id": "2026-0005", "username": "anna.garcia", "role": "Staff", "full_name": "Anna Garcia", "password": "Staff@123"},
-    {"school_id": "2026-0007", "username": "carlos.mendoza", "role": "Chairperson", "full_name": "Carlos Mendoza", "password": "Chair@123"},
+    {"school_id": "2026-0001", "username": "alexa.cortes", "role": "Student", "full_name": "Alexa Cortes", "password": "Student@123", "program": "BSCS"},
+    {"school_id": "2026-0003", "username": "maria.santos", "role": "Faculty", "full_name": "Maria Santos", "password": "Faculty@123", "program": ""},
+    {"school_id": "2026-0005", "username": "anna.garcia", "role": "Staff", "full_name": "Anna Garcia", "password": "Staff@123", "program": ""},
+    {"school_id": "2026-0007", "username": "carlos.mendoza", "role": "Chairperson", "full_name": "Carlos Mendoza", "password": "Chair@123", "program": "", "chairperson_college": "COLLEGE OF SCIENCE AND MANAGEMENT"},
 ]
 
 ROOM_DATA = [
-    {"room_id": "RM-CMLAB-A01", "room_number": "COMLAB 1", "room_name": "Computer Laboratory 1", "type": "Computer Laboratory"},
-    {"room_id": "RM-CMLAB-A02", "room_number": "COMLAB 2", "room_name": "Computer Laboratory 2", "type": "Computer Laboratory"},
-    {"room_id": "RM-CMLAB-A03", "room_number": "COMLAB 3", "room_name": "Computer Laboratory 3", "type": "Computer Laboratory"},
-    {"room_id": "RM-CMLAB-A04", "room_number": "COMLAB 4", "room_name": "Computer Laboratory 4", "type": "Computer Laboratory"},
-    {"room_id": "RM-CMLEC-B01", "room_number": "COMLEC 1", "room_name": "Computer Lecture Room 1", "type": "Lecture Room"},
-    {"room_id": "RM-CMLEC-B02", "room_number": "COMLEC 2", "room_name": "Computer Lecture Room 2", "type": "Lecture Room"},
-    {"room_id": "RM-FAC-C01", "room_number": "FACULTY OFFICE", "room_name": "Faculty Office", "type": "Office"},
-    {"room_id": "RM-LIB-D01", "room_number": "LIBRARY", "room_name": "School Library", "type": "Library"},
+    # CS DEPARTMENT
+    {"room_id": "RM-CSLAB-A01", "room_number": "COMLAB 1", "room_name": "COMLAB 1", "type": "Computer Laboratory"},
+    {"room_id": "RM-CSLAB-A02", "room_number": "COMLAB 2", "room_name": "COMLAB 2", "type": "Computer Laboratory"},
+    {"room_id": "RM-CSLAB-A03", "room_number": "COMLAB 3", "room_name": "COMLAB 3", "type": "Computer Laboratory"},
+    {"room_id": "RM-CSLAB-A04", "room_number": "COMLAB 4", "room_name": "COMLAB 4", "type": "Computer Laboratory"},
 
-    {"room_id": "RM-BEED-E01", "room_number": "BEED ROOM 1", "room_name": "Bachelor of Elementary Education Room 1", "type": "Classroom"},
-    {"room_id": "RM-BEED-E02", "room_number": "BEED ROOM 2", "room_name": "Bachelor of Elementary Education Room 2", "type": "Classroom"},
+    {"room_id": "RM-CSLEC-B01", "room_number": "COMLEC 1", "room_name": "COMLEC 1", "type": "Lecture Room"},
+    {"room_id": "RM-CSLEC-B02", "room_number": "COMLEC 2", "room_name": "COMLEC 2", "type": "Lecture Room"},
 
-    {"room_id": "RM-BSHM-F01", "room_number": "BSHM ROOM 1", "room_name": "Bachelor of Science in Hospitality Management Room 1", "type": "Classroom"},
-    {"room_id": "RM-BSHM-F02", "room_number": "BSHM ROOM 2", "room_name": "Bachelor of Science in Hospitality Management Room 2", "type": "Classroom"},
+    {"room_id": "RM-CSSLT-C01", "room_number": "S&T LAB 1", "room_name": "S&T LAB 1", "type": "Laboratory"},
+    {"room_id": "RM-CSSLT-C02", "room_number": "S&T LAB 2", "room_name": "S&T LAB 2", "type": "Laboratory"},
 
-    {"room_id": "RM-BSEDM-G01", "room_number": "BSED-MATH 1", "room_name": "BSED Mathematics Room 1", "type": "Classroom"},
-    {"room_id": "RM-BSEDM-G02", "room_number": "BSED-MATH 2", "room_name": "BSED Mathematics Room 2", "type": "Classroom"},
+    # CTE BUILDING
+    {"room_id": "RM-CTERM-D01", "room_number": "CTE ROOM 1", "room_name": "CTE ROOM 1", "type": "Classroom"},
+    {"room_id": "RM-CTERM-D02", "room_number": "CTE ROOM 2", "room_name": "CTE ROOM 2", "type": "Classroom"},
+    {"room_id": "RM-CTERM-D03", "room_number": "CTE ROOM 3", "room_name": "CTE ROOM 3", "type": "Classroom"},
+    {"room_id": "RM-CTERM-D04", "room_number": "CTE ROOM 4", "room_name": "CTE ROOM 4", "type": "Classroom"},
+    {"room_id": "RM-CTERM-D05", "room_number": "CTE ROOM 5", "room_name": "CTE ROOM 5", "type": "Classroom"},
+    {"room_id": "RM-CTERM-D06", "room_number": "CTE ROOM 6", "room_name": "CTE ROOM 6", "type": "Classroom"},
+    {"room_id": "RM-CTERM-D07", "room_number": "CTE ROOM 7", "room_name": "CTE ROOM 7", "type": "Classroom"},
+    {"room_id": "RM-CTERM-D08", "room_number": "CTE ROOM 8", "room_name": "CTE ROOM 8", "type": "Classroom"},
 
-    {"room_id": "RM-ES-H01", "room_number": "ES ROOM 1", "room_name": "Elementary School Room 1", "type": "Classroom"},
-    {"room_id": "RM-ES-H02", "room_number": "ES ROOM 2", "room_name": "Elementary School Room 2", "type": "Classroom"},
+    {"room_id": "RM-CTELAB-E01", "room_number": "CTE LAB 1", "room_name": "CTE LAB 1", "type": "Laboratory"},
+    {"room_id": "RM-CTELAB-E02", "room_number": "CTE LAB 2", "room_name": "CTE LAB 2", "type": "Laboratory"},
+    {"room_id": "RM-CTELAB-E03", "room_number": "CTE LAB 3", "room_name": "CTE LAB 3", "type": "Laboratory"},
+    {"room_id": "RM-CTELAB-E04", "room_number": "CTE LAB 4", "room_name": "CTE LAB 4", "type": "Laboratory"},
 
-    {"room_id": "RM-BTLED-I01", "room_number": "BTLED-HE 1", "room_name": "BTLED Home Economics Room 1", "type": "Classroom"},
-    {"room_id": "RM-BTLED-I02", "room_number": "BTLED-HE 2", "room_name": "BTLED Home Economics Room 2", "type": "Classroom"},
+    {"room_id": "RM-CTESPEECH-F01", "room_number": "SPEECH LAB", "room_name": "SPEECH LAB", "type": "Laboratory"},
 
-    {"room_id": "RM-SAC-J01", "room_number": "STUDENT ACTIVITY CENTER", "room_name": "Student Activity Center", "type": "Activity Center"}
-]
+    # HM BUILDING
+    {"room_id": "RM-HMHK-G01", "room_number": "HOT KITCHEN", "room_name": "HOT KITCHEN", "type": "Laboratory"},
+    {"room_id": "RM-HMCK-G02", "room_number": "COLD KITCHEN", "room_name": "COLD KITCHEN", "type": "Laboratory"},
 
+    {"room_id": "RM-HMROOM-H01", "room_number": "HM ROOM 1", "room_name": "HM ROOM 1", "type": "Classroom"},
+    {"room_id": "RM-HMROOM-H02", "room_number": "HM ROOM 2", "room_name": "HM ROOM 2", "type": "Classroom"},
+    {"room_id": "RM-HMROOM-H03", "room_number": "HM ROOM 3", "room_name": "HM ROOM 3", "type": "Classroom"},
+    {"room_id": "RM-HMROOM-H04", "room_number": "HM ROOM 4", "room_name": "HM ROOM 4", "type": "Classroom"},
 
-FACILITIES = [
-    {"name": "Computer Laboratory", "type": "laboratory", "capacity": 40},
-    {"name": "Science Laboratory", "type": "laboratory", "capacity": 30},
-    {"name": "Faculty Room", "type": "office", "capacity": 20},
-    {"name": "Registrar Office", "type": "office", "capacity": 15},
-    {"name": "BEED Classroom", "type": "classroom", "capacity": 40},
-    {"name": "BSHM Classroom", "type": "classroom", "capacity": 40},
-    {"name": "BSED-MATH Classroom", "type": "classroom", "capacity": 40},
-    {"name": "ES Classroom", "type": "classroom", "capacity": 40},
-    {"name": "BTLED-HE Classroom", "type": "classroom", "capacity": 40},
+    {"room_id": "RM-HMSLT-I01", "room_number": "S&T LAB", "room_name": "S&T LAB", "type": "Laboratory"},
 
+    # ES BUILDING
+    {"room_id": "RM-ESROOM-J01", "room_number": "ES ROOM 1", "room_name": "ES ROOM 1", "type": "Classroom"},
+    {"room_id": "RM-ESROOM-J02", "room_number": "ES ROOM 2", "room_name": "ES ROOM 2", "type": "Classroom"},
+    {"room_id": "RM-ESROOM-J03", "room_number": "ES ROOM 3", "room_name": "ES ROOM 3", "type": "Classroom"},
+    {"room_id": "RM-ESROOM-J04", "room_number": "ES ROOM 4", "room_name": "ES ROOM 4", "type": "Classroom"},
+    {"room_id": "RM-ESROOM-J05", "room_number": "ES ROOM 5", "room_name": "ES ROOM 5", "type": "Classroom"},
+
+    # OTHER ROOMS / FACILITIES
+    {"room_id": "RM-SAC-K01", "room_number": "STUDENT ACTIVITY CENTER", "room_name": "STUDENT ACTIVITY CENTER", "type": "Activity Center"},
+    {"room_id": "RM-SAS-L01", "room_number": "SAS OFFICE", "room_name": "SAS OFFICE", "type": "Office"},
+    {"room_id": "RM-PROC-M01", "room_number": "PROCUREMENT OFFICE", "room_name": "PROCUREMENT OFFICE", "type": "Office"},
+    {"room_id": "RM-ADMIN-N01", "room_number": "ADMIN OFFICE", "room_name": "ADMIN OFFICE", "type": "Office"},
+    {"room_id": "RM-SERVER-O01", "room_number": "SERVER ROOM", "room_name": "SERVER ROOM", "type": "Technical Facility"},
+    {"room_id": "RM-CLINIC-P01", "room_number": "CLINIC", "room_name": "CLINIC", "type": "Health Facility"},
+    {"room_id": "RM-GUID-Q01", "room_number": "GUIDANCE OFFICE", "room_name": "GUIDANCE OFFICE", "type": "Office"},
+    {"room_id": "RM-DNST-R01", "room_number": "DNST OFFICE", "room_name": "DNST OFFICE", "type": "Office"},
+    {"room_id": "RM-ROTC-S01", "room_number": "ROTC OFFICE", "room_name": "ROTC OFFICE", "type": "Office"},
+    {"room_id": "RM-ALUMNI-T01", "room_number": "ALUMNI OFFICE", "room_name": "ALUMNI OFFICE", "type": "Office"},
+    {"room_id": "RM-FSTLP-U01", "room_number": "FSTLP OFFICE", "room_name": "FSTLP OFFICE", "type": "Office"},
+    {"room_id": "RM-SDS-V01", "room_number": "SDS OFFICE", "room_name": "SDS OFFICE", "type": "Office"},
+    {"room_id": "RM-SSG-W01", "room_number": "SSG OFFICE", "room_name": "SSG OFFICE", "type": "Office"},
+    {"room_id": "RM-SCHOLAR-X01", "room_number": "SCHOLARSHIP OFFICE", "room_name": "SCHOLARSHIP OFFICE", "type": "Office"},
+    {"room_id": "RM-CSM-Y01", "room_number": "CSM OFFICE", "room_name": "CSM OFFICE", "type": "Office"},
+    {"room_id": "RM-FAC-Z01", "room_number": "FACULTY OFFICE", "room_name": "FACULTY OFFICE", "type": "Office"},
+    {"room_id": "RM-AVR-AA01", "room_number": "AVR", "room_name": "AVR", "type": "Facility"},
+    {"room_id": "RM-LIB-AB01", "room_number": "LIBRARY", "room_name": "LIBRARY", "type": "Library"},
+    {"room_id": "RM-CTEOFF-AC01", "room_number": "CTE OFFICE", "room_name": "CTE OFFICE", "type": "Office"},
+    {"room_id": "RM-ACC-AD01", "room_number": "ACCREDITATION CENTER", "room_name": "ACCREDITATION CENTER", "type": "Office"},
+    {"room_id": "RM-PARAGON-AE01", "room_number": "PARAGON OFFICE", "room_name": "PARAGON OFFICE", "type": "Office"},
 ]
 
 # =====================================================
@@ -655,7 +747,7 @@ visitors = set()
 # FACILITIES SET
 # =====================================================
 
-facilities_set = {"Library", "Computer Laboratory", "Science Laboratory", "Faculty Room", "Registrar Office"}
+facilities_set = {"LIBRARY", "COMLAB 1", "COMLAB 2", "COMLAB 3", "COMLAB 4", "S&T LAB 1", "S&T LAB 2", "FACULTY OFFICE"}
 
 # =====================================================
 # USER STORAGE
@@ -695,11 +787,15 @@ role_to_row = {
 }
 
 facility_to_col = {
-    "Library": 0,
-    "Computer Laboratory": 1,
-    "Science Laboratory": 2,
-    "Faculty Room": 3,
-    "Registrar Office": 4
+    "LIBRARY": 0,
+    "COMLAB 1": 1,
+    "COMLAB 2": 1,
+    "COMLAB 3": 1,
+    "COMLAB 4": 1,
+    "S&T LAB 1": 2,
+    "S&T LAB 2": 2,
+    "FACULTY OFFICE": 3,
+    "CSM OFFICE": 4,
 }
 
 # =====================================================
@@ -707,13 +803,15 @@ facility_to_col = {
 # =====================================================
 
 class User:
-    def __init__(self, school_id, username, password, role, full_name):
+    def __init__(self, school_id, username, password, role, full_name, program=""):
         self.school_id = school_id
         self.username = username
         self.password = password  # Store original password for display
         self.password_hash = Cryptography.hash_password(password)
         self.role = role
         self.full_name = full_name
+        self.program = program  # Added program field
+        self.chairperson_college = ""  # For chairperson, which college they oversee
         self.is_authorized = False
         self.secure_code = Cryptography.generate_secure_code()
         self.access_count = 0
@@ -725,9 +823,11 @@ class User:
         return {
             "school_id": self.school_id,
             "username": self.username,
-            "password": self.password,  # Include password
+            "password": self.password,
             "role": self.role,
             "full_name": self.full_name,
+            "program": self.program,
+            "chairperson_college": self.chairperson_college,
             "authorized": self.is_authorized,
             "access_count": self.access_count
         }
@@ -830,11 +930,11 @@ class AccessLogic:
     def can_access(user, facility_name):
         """Check if user can access a facility with time allotment"""
         if user.role in ["Faculty", "Chairperson"]:
-            if facility_name in ["Library", "Computer Laboratory", "Science Laboratory", "Faculty Room"]:
+            if facility_name in ["LIBRARY", "COMLAB 1", "COMLAB 2", "COMLAB 3", "COMLAB 4", "S&T LAB 1", "S&T LAB 2", "FACULTY OFFICE"]:
                 return True
         
         if user.role == "Staff":
-            if facility_name in ["Library", "Registrar Office"]:
+            if facility_name in ["LIBRARY", "CSM OFFICE"]:
                 return True
         
         if user.role == "Student":
@@ -891,10 +991,47 @@ class AccessLogic:
         return usage
 
 # =====================================================
+# CAN ACCESS ROOM BY PROGRAM
+# =====================================================
+
+def can_access_room(user, room_name):
+    """Check if user can access a room based on their program"""
+    if not user:
+        return False
+    
+    # Faculty, Staff, and Chairperson have broader access
+    if user.role in ['Faculty', 'Staff']:
+        return True
+    
+    if user.role == 'Chairperson':
+        # Chairperson has access to all rooms in their college
+        room_program = ROOM_PROGRAM_MAPPING.get(room_name, 'General')
+        if user.chairperson_college == 'COLLEGE OF SCIENCE AND MANAGEMENT':
+            if room_program in ['BSCS', 'BSES', 'BSHM', 'CSM']:
+                return True
+        elif user.chairperson_college == 'COLLEGE OF TEACHER EDUCATION':
+            if room_program in ['BEED', 'BSED-MATH', 'BTLED-HE', 'CTE']:
+                return True
+        return False
+    
+    if user.role == 'Student':
+        # Students can only access rooms in their program
+        room_program = ROOM_PROGRAM_MAPPING.get(room_name, 'General')
+        if room_program == user.program:
+            return True
+        # Check if they have an approved request for this room
+        for req in access_requests:
+            if req.username == user.username and req.facility_name == room_name and req.status == 'Approved':
+                return True
+        return False
+    
+    return False
+
+# =====================================================
 # REGISTRATION FUNCTION
 # =====================================================
 
-def register_user(school_id, username, password, role, full_name):
+def register_user(school_id, username, password, role, full_name, program=""):
     for user in users:
         if user.school_id == school_id:
             return False, "School ID already exists"
@@ -905,7 +1042,7 @@ def register_user(school_id, username, password, role, full_name):
     if role not in valid_roles:
         return False, f"Invalid role. Choose from: {', '.join(valid_roles)}"
     
-    new_user = User(school_id, username, password, role, full_name)
+    new_user = User(school_id, username, password, role, full_name, program)
     users.append(new_user)
     
     if role == "Student":
@@ -1038,8 +1175,15 @@ def initialize_system():
             user_data["username"],
             user_data["password"],
             user_data["role"],
-            user_data["full_name"]
+            user_data["full_name"],
+            user_data.get("program", "")
         )
+        # Set chairperson college if applicable
+        if user_data.get("role") == "Chairperson" and user_data.get("chairperson_college"):
+            for u in users:
+                if u.username == user_data["username"]:
+                    u.chairperson_college = user_data["chairperson_college"]
+                    break
     
     global fsm
     fsm = FiniteStateMachine()
@@ -1085,6 +1229,7 @@ def utility_processor():
         'get_fsm_state': lambda: fsm.get_state(),
         'datetime': datetime
     }
+
 @app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
@@ -1101,8 +1246,10 @@ def dashboard():
         'full_name': user.full_name if user else 'Unknown',
         'school_id': user.school_id if user else 'N/A',
         'username': user.username if user else 'N/A',
-        'password': user.password if user else 'N/A',  # Include password
+        'password': user.password if user else 'N/A',
         'role': user.role if user else 'N/A',
+        'program': user.program if user else 'N/A',
+        'chairperson_college': user.chairperson_college if user else 'N/A',
         'access_count': user.access_count if user else 0
     }
     
@@ -1110,13 +1257,15 @@ def dashboard():
     room_status = []
     for room in ROOM_DATA:
         availability = AccessLogic.get_room_availability(room['room_name'])
-        can_access = AccessLogic.can_access(user, room['room_name']) if user else False
+        can_access = can_access_room(user, room['room_name']) if user else False
+        program = ROOM_PROGRAM_MAPPING.get(room['room_name'], 'General')
         
         room_status.append({
             'room_id': room['room_id'],
             'room_name': room['room_name'],
             'room_number': room['room_number'],
             'type': room['type'],
+            'program': program,
             'available': availability['available'],
             'occupied_by': availability['occupied_by'] if not availability['available'] else None,
             'until': availability['until'] if not availability['available'] else None,
@@ -1147,6 +1296,24 @@ def dashboard():
                          active_usages=active_usages,
                          user_data=user_data)
 
+@app.route('/logout_confirm')
+def logout_confirm():
+    """Show logout confirmation page"""
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return render_template('logout_confirm.html')
+
+@app.route('/logout_do', methods=['POST'])
+def logout_do():
+    """Confirm logout"""
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    fsm.transition(FiniteStateMachine.STATES['EXIT'])
+    session.clear()
+    flash('Logged out successfully', 'success')
+    fsm.reset()
+    return redirect(url_for('login'))
+
 @app.route('/logout')
 def logout():
     fsm.transition(FiniteStateMachine.STATES['EXIT'])
@@ -1162,6 +1329,7 @@ def check_access_web():
     
     result = None
     usage_info = None
+    selected_facility = request.args.get('facility', '')
     
     if request.method == 'POST':
         facility = request.form.get('facility')
@@ -1183,6 +1351,7 @@ def check_access_web():
                          facilities=facilities_set,
                          result=result,
                          usage_info=usage_info,
+                         selected_facility=selected_facility,
                          fsm_state=fsm.get_state())
 
 @app.route('/verify_id', methods=['GET', 'POST'])
@@ -1213,9 +1382,16 @@ def request_access_web():
             user = u
             break
     
-    if user and user.role != 'Student':
-        flash('Only students can request access', 'error')
+    # Allow all users except visitors to request access
+    if user and user.role == 'Visitor':
+        flash('Visitors cannot request access', 'error')
         return redirect(url_for('dashboard'))
+    
+    # Get all rooms and facilities for the dropdown
+    all_facilities = []
+    for room in ROOM_DATA:
+        if room['room_name'] not in all_facilities:
+            all_facilities.append(room['room_name'])
     
     if request.method == 'POST':
         facility = request.form.get('facility')
@@ -1224,12 +1400,17 @@ def request_access_web():
         end_hour = int(request.form.get('end_hour'))
         purpose = request.form.get('purpose')
         
+        # Validate time
+        if start_hour >= end_hour:
+            flash('End time must be after start time', 'error')
+            return render_template('request_access.html', facilities=all_facilities)
+        
         req = AccessRequest(session['username'], facility, date_str, start_hour, end_hour, purpose)
         access_requests.append(req)
         flash(f'Request submitted! ID: {req.id}', 'success')
         return redirect(url_for('dashboard'))
     
-    return render_template('request_access.html', facilities=facilities_set)
+    return render_template('request_access.html', facilities=all_facilities)
 
 @app.route('/admin')
 def admin():
@@ -1247,8 +1428,46 @@ def admin():
         return redirect(url_for('dashboard'))
     
     pending = [req for req in access_requests if req.status == 'Pending']
-    return render_template('admin.html', pending_requests=pending)
-
+    approved = [req for req in access_requests if req.status == 'Approved']
+    
+    # Get approved requests by program
+    approved_by_program = {}
+    for req in approved:
+        req_user = None
+        for u in users:
+            if u.username == req.username:
+                req_user = u
+                break
+        program = req_user.program if req_user and req_user.program else 'General'
+        if program not in approved_by_program:
+            approved_by_program[program] = {'count': 0, 'users': []}
+        approved_by_program[program]['count'] += 1
+        if req_user and req_user.username not in approved_by_program[program]['users']:
+            approved_by_program[program]['users'].append(req_user.username)
+    
+    # Get room usage by program
+    room_usage_by_program = []
+    for room in ROOM_DATA:
+        availability = AccessLogic.get_room_availability(room['room_name'])
+        program = ROOM_PROGRAM_MAPPING.get(room['room_name'], 'General')
+        room_usage_by_program.append({
+            'room_name': room['room_name'],
+            'room_number': room['room_number'],
+            'program': program,
+            'available': availability['available'],
+            'occupied_by': availability['occupied_by'] if not availability['available'] else None
+        })
+    
+    return render_template('admin.html',
+                         pending_requests=pending,
+                         total_users=len(users),
+                         pending_requests_count=len(pending),  # Add this line
+                         approved_requests=len(approved),
+                         total_rooms=len(ROOM_DATA),
+                         approved_by_program=approved_by_program,
+                         room_usage_by_program=room_usage_by_program,
+                         all_users=users)
+    
 @app.route('/admin/approve/<request_id>')
 def approve_request(request_id):
     if 'username' not in session:
@@ -1288,6 +1507,72 @@ def reject_request(request_id):
         flash('Request not found', 'error')
     
     return redirect(url_for('admin'))
+
+# =====================================================
+# REGISTER ROUTE
+# =====================================================
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        full_name = request.form.get('full_name')
+        school_id = request.form.get('school_id')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        role = request.form.get('role')
+        program = request.form.get('program', '')
+        chairperson_college = request.form.get('chairperson_college', '')
+        
+        # Validate fields
+        if not full_name or not school_id or not username or not password or not role:
+            flash('All fields are required', 'error')
+            return render_template('register.html', 
+                                 program_options=PROGRAM_OPTIONS,
+                                 selected_role=role,
+                                 selected_program=program,
+                                 form_data=request.form)
+        
+        # Check if user exists
+        for user in users:
+            if user.school_id == school_id:
+                flash('School ID already exists', 'error')
+                return render_template('register.html', program_options=PROGRAM_OPTIONS)
+            if user.username == username:
+                flash('Username already exists', 'error')
+                return render_template('register.html', program_options=PROGRAM_OPTIONS)
+        
+        # Validate program for students
+        if role == 'Student' and not program:
+            flash('Program is required for students', 'error')
+            return render_template('register.html', program_options=PROGRAM_OPTIONS)
+        
+        # Validate chairperson college
+        if role == 'Chairperson' and not chairperson_college:
+            flash('College oversight is required for Chairperson', 'error')
+            return render_template('register.html', program_options=PROGRAM_OPTIONS)
+        
+        # Create user
+        new_user = User(school_id, username, password, role, full_name, program)
+        if role == 'Chairperson':
+            new_user.chairperson_college = chairperson_college
+        users.append(new_user)
+        
+        # Add to sets
+        if role == "Student":
+            students.add(username)
+        elif role == "Faculty":
+            faculty.add(username)
+        elif role == "Staff":
+            staff.add(username)
+        elif role == "Chairperson":
+            chairpersons.add(username)
+        elif role == "Visitor":
+            visitors.add(username)
+        
+        flash('User registered successfully!', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html', program_options=PROGRAM_OPTIONS)
 
 # =====================================================
 # NEW ROUTES FOR FINAL PROJECT FEATURES
@@ -1462,11 +1747,11 @@ def rooms_facilities():
             user = u
             break
     
-    # Room status with access information
     room_status = []
     for room in ROOM_DATA:
         availability = AccessLogic.get_room_availability(room['room_name'])
-        can_access = AccessLogic.can_access(user, room['room_name']) if user else False
+        can_access = can_access_room(user, room['room_name']) if user else False
+        program = ROOM_PROGRAM_MAPPING.get(room['room_name'], 'General')
         
         # Check if user has an approved request for this room
         has_approved_request = False
@@ -1481,6 +1766,7 @@ def rooms_facilities():
             'room_name': room['room_name'],
             'room_number': room['room_number'],
             'type': room['type'],
+            'program': program,
             'available': availability['available'],
             'occupied_by': availability['occupied_by'] if not availability['available'] else None,
             'until': availability['until'] if not availability['available'] else None,
@@ -1489,25 +1775,8 @@ def rooms_facilities():
             'time_allotted': '60 minutes' if can_access else 'N/A'
         })
     
-    # Facility status
-    facility_status = []
-    for facility in FACILITIES:
-        availability = AccessLogic.get_room_availability(facility['name'])
-        can_access = AccessLogic.can_access(user, facility['name']) if user else False
-        
-        facility_status.append({
-            'name': facility['name'],
-            'type': facility['type'],
-            'capacity': facility['capacity'],
-            'available': availability['available'],
-            'occupied_by': availability['occupied_by'] if not availability['available'] else None,
-            'can_access': can_access,
-            'time_allotted': '60 minutes' if can_access else 'N/A'
-        })
-    
     return render_template('rooms_facilities.html',
                          room_status=room_status,
-                         facility_status=facility_status,
                          fsm_state=fsm.get_state())
 
 @app.route('/room_usage')

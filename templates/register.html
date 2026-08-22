@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Smart Campus Navigation{% endblock %}
+
+{% block page_title %}Register New User{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card animate-in">
+            <div class="card-header">
+                <i class="bi bi-person-plus me-2"></i> Register New User
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('register') }}">
+                    <!-- Full Name -->
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" 
+                               value="{{ form_data.full_name if form_data else '' }}" required>
+                    </div>
+
+                    <!-- School ID -->
+                    <div class="mb-3">
+                        <label for="school_id" class="form-label">School ID</label>
+                        <input type="text" class="form-control" id="school_id" name="school_id" 
+                               placeholder="2026-XXXX" value="{{ form_data.school_id if form_data else '' }}" required>
+                        <small class="text-secondary">Format: YYYY-XXXX (e.g., 2026-0001)</small>
+                    </div>
+
+                    <!-- Username -->
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               value="{{ form_data.username if form_data else '' }}" required>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+
+                    <!-- Role -->
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role</label>
+                        <select class="form-select" id="role" name="role" onchange="toggleRoleFields()" required>
+                            <option value="">Select Role</option>
+                            <option value="Student" {% if selected_role == 'Student' %}selected{% endif %}>Student</option>
+                            <option value="Faculty" {% if selected_role == 'Faculty' %}selected{% endif %}>Faculty</option>
+                            <option value="Staff" {% if selected_role == 'Staff' %}selected{% endif %}>Staff</option>
+                            <option value="Chairperson" {% if selected_role == 'Chairperson' %}selected{% endif %}>Chairperson</option>
+                        </select>
+                    </div>
+
+                    <!-- Program - Only for Students -->
+                    <div class="mb-3" id="programSection" style="display: {% if selected_role == 'Student' %}block{% else %}none{% endif %};">
+                        <label class="form-label">Program of the user</label>
+                        <div class="card" style="background: var(--primary-dark); border: 1px solid var(--border-color);">
+                            <div class="card-body">
+                                {% for college, programs in program_options.items() %}
+                                <div class="mb-3">
+                                    <strong class="text-secondary">{{ college }}</strong>
+                                    {% for code, name in programs %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="program" 
+                                               id="program_{{ code }}" value="{{ code }}"
+                                               {% if selected_program == code %}checked{% endif %}>
+                                        <label class="form-check-label" for="program_{{ code }}">
+                                            {{ code }} - {{ name }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chairperson College -->
+                    <div class="mb-3" id="chairpersonSection" style="display: {% if selected_role == 'Chairperson' %}block{% else %}none{% endif %};">
+                        <label class="form-label">College Oversight</label>
+                        <div class="card" style="background: var(--primary-dark); border: 1px solid var(--border-color);">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="chairperson_college" 
+                                           id="chair_csm" value="COLLEGE OF SCIENCE AND MANAGEMENT">
+                                    <label class="form-check-label" for="chair_csm">
+                                        COLLEGE OF SCIENCE AND MANAGEMENT
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="chairperson_college" 
+                                           id="chair_cte" value="COLLEGE OF TEACHER EDUCATION">
+                                    <label class="form-check-label" for="chair_cte">
+                                        COLLEGE OF TEACHER EDUCATION
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-person-plus me-2"></i> Register User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleRoleFields() {
+    const role = document.getElementById('role').value;
+    const programSection = document.getElementById('programSection');
+    const chairpersonSection = document.getElementById('chairpersonSection');
+    
+    if (role === 'Student') {
+        programSection.style.display = 'block';
+        chairpersonSection.style.display = 'none';
+    } else if (role === 'Chairperson') {
+        programSection.style.display = 'none';
+        chairpersonSection.style.display = 'block';
+    } else {
+        programSection.style.display = 'none';
+        chairpersonSection.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

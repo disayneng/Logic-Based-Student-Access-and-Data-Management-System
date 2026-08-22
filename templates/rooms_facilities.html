@@ -5,160 +5,267 @@
 {% block page_title %}Rooms & Facilities{% endblock %}
 
 {% block content %}
-<!-- Filter/Search -->
-<div class="card animate-in mb-4">
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <input type="text" class="form-control" id="searchRoom" placeholder="Search rooms..." 
-                       onkeyup="filterRooms()">
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" id="filterType" onchange="filterRooms()">
-                    <option value="all">All Types</option>
-                    <option value="Computer Laboratory">Computer Laboratory</option>
-                    <option value="Lecture Room">Lecture Room</option>
-                    <option value="Office">Office</option>
-                    <option value="Library">Library</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" id="filterStatus" onchange="filterRooms()">
-                    <option value="all">All Status</option>
-                    <option value="available">Available</option>
-                    <option value="occupied">Occupied</option>
-                </select>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Room Cards -->
-<div class="row g-4" id="roomContainer">
-    {% for room in room_status %}
-    <div class="col-xl-3 col-lg-4 col-md-6 room-item" 
-         data-type="{{ room.type }}" 
-         data-status="{{ 'available' if room.available else 'occupied' }}">
-        <div class="card animate-in h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <span class="room-indicator {{ 'available' if room.available else 'occupied' }}"></span>
-                        <h6 class="mb-0 d-inline">{{ room.room_name }}</h6>
-                    </div>
-                    <span class="badge bg-secondary">{{ room.room_number }}</span>
-                </div>
-                <div class="mb-2">
-                    <small class="text-secondary">Type:</small>
-                    <span class="badge bg-secondary">{{ room.type }}</span>
-                </div>
-                <div class="mb-2">
-                    <small class="text-secondary">Status:</small>
-                    {% if room.available %}
-                        <span class="badge-status available">
-                            <i class="bi bi-check-circle me-1"></i> Available
-                        </span>
-                    {% else %}
-                        <span class="badge-status occupied">
-                            <i class="bi bi-x-circle me-1"></i> Occupied
-                            <small class="d-block text-secondary" style="font-size: 0.6rem;">
-                                by {{ room.occupied_by }}
-                                {% if room.until %}until {{ room.until.strftime('%H:%M') }}{% endif %}
-                            </small>
-                        </span>
-                    {% endif %}
-                </div>
-                <div class="mb-2">
-                    <small class="text-secondary">Access:</small>
-                    {% if room.can_access %}
-                        <span class="badge-status granted">
-                            <i class="bi bi-check-circle me-1"></i> Granted
-                            <small class="d-block text-secondary" style="font-size: 0.6rem;">
-                                Time: {{ room.time_allotted }}
-                            </small>
-                        </span>
-                    {% else %}
-                        <span class="badge-status denied">
-                            <i class="bi bi-x-circle me-1"></i> Denied
-                        </span>
-                    {% endif %}
-                </div>
-                {% if room.has_approved_request %}
-                <div class="mt-2">
-                    <span class="badge-status approved">
-                        <i class="bi bi-check-circle me-1"></i> Request Approved
-                    </span>
-                </div>
-                {% endif %}
-            </div>
-            <div class="card-footer bg-transparent border-0">
-                <a href="{{ url_for('check_access_web') }}?facility={{ room.room_name }}" 
-                   class="btn btn-sm btn-primary w-100">
-                    <i class="bi bi-shield-lock me-1"></i> Check Access
-                </a>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Facilities Section -->
-<div class="row mt-4">
+<div class="row g-4">
+    <!-- Computer Laboratories -->
     <div class="col-12">
-        <h5 class="mb-3"><i class="bi bi-building me-2" style="color: var(--accent-purple);"></i>Facilities</h5>
-    </div>
-    {% for facility in facility_status %}
-    <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="card animate-in">
+            <div class="card-header">
+                <i class="bi bi-laptop me-2"></i> Computer Laboratories
+            </div>
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="mb-1">{{ facility.name }}</h6>
-                        <small class="text-secondary">{{ facility.type|capitalize }} • Capacity: {{ facility.capacity }}</small>
-                    </div>
-                    <span class="room-indicator {{ 'available' if facility.available else 'occupied' }}"></span>
-                </div>
-                <div class="mt-2">
-                    {% if facility.available %}
-                        <span class="badge-status available">Available</span>
-                    {% else %}
-                        <span class="badge-status occupied">
-                            Occupied by {{ facility.occupied_by }}
-                        </span>
-                    {% endif %}
-                </div>
-                <div class="mt-2">
-                    <small class="text-secondary">Access:</small>
-                    {% if facility.can_access %}
-                        <span class="badge-status granted">Granted</span>
-                    {% else %}
-                        <span class="badge-status denied">Denied</span>
-                    {% endif %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Program</th>
+                                <th>Status</th>
+                                <th>Access</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in room_status if 'COMLAB' in room.room_id or 'COMLEC' in room.room_id %}
+                            <tr>
+                                <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
+                                <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
+                                <td>
+                                    <span class="room-indicator {{ 'available' if room.available else 'occupied' }}"></span>
+                                    {{ 'Available' if room.available else 'Occupied' }}
+                                    {% if not room.available %}
+                                    <br><small class="text-secondary">by {{ room.occupied_by }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if room.can_access %}
+                                    <span class="badge bg-success">Accessible</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Restricted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
+                                        <i class="bi bi-shield-check"></i> Check Access
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
-    {% endfor %}
+
+    <!-- CTE Rooms -->
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header">
+                <i class="bi bi-mortarboard me-2"></i> CTE Classrooms & Laboratories
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Program</th>
+                                <th>Status</th>
+                                <th>Access</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in room_status if 'CTE' in room.room_id %}
+                            <tr>
+                                <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
+                                <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
+                                <td>
+                                    <span class="room-indicator {{ 'available' if room.available else 'occupied' }}"></span>
+                                    {{ 'Available' if room.available else 'Occupied' }}
+                                    {% if not room.available %}
+                                    <br><small class="text-secondary">by {{ room.occupied_by }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if room.can_access %}
+                                    <span class="badge bg-success">Accessible</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Restricted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
+                                        <i class="bi bi-shield-check"></i> Check Access
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HM Rooms -->
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header">
+                <i class="bi bi-house me-2"></i> Hospitality Management Rooms
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Program</th>
+                                <th>Status</th>
+                                <th>Access</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in room_status if 'HM' in room.room_id %}
+                            <tr>
+                                <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
+                                <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
+                                <td>
+                                    <span class="room-indicator {{ 'available' if room.available else 'occupied' }}"></span>
+                                    {{ 'Available' if room.available else 'Occupied' }}
+                                    {% if not room.available %}
+                                    <br><small class="text-secondary">by {{ room.occupied_by }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if room.can_access %}
+                                    <span class="badge bg-success">Accessible</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Restricted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
+                                        <i class="bi bi-shield-check"></i> Check Access
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ES Rooms -->
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header">
+                <i class="bi bi-tree me-2"></i> Environmental Science Rooms
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Program</th>
+                                <th>Status</th>
+                                <th>Access</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in room_status if 'ES' in room.room_id %}
+                            <tr>
+                                <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
+                                <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
+                                <td>
+                                    <span class="room-indicator {{ 'available' if room.available else 'occupied' }}"></span>
+                                    {{ 'Available' if room.available else 'Occupied' }}
+                                    {% if not room.available %}
+                                    <br><small class="text-secondary">by {{ room.occupied_by }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if room.can_access %}
+                                    <span class="badge bg-success">Accessible</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Restricted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
+                                        <i class="bi bi-shield-check"></i> Check Access
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other Facilities -->
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header">
+                <i class="bi bi-building me-2"></i> Other Facilities
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Facility</th>
+                                <th>Program</th>
+                                <th>Status</th>
+                                <th>Access</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in room_status if not ('COMLAB' in room.room_id or 'COMLEC' in room.room_id or 'CTE' in room.room_id or 'HM' in room.room_id or 'ES' in room.room_id) %}
+                            <tr>
+                                <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
+                                <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
+                                <td>
+                                    <span class="room-indicator {{ 'available' if room.available else 'occupied' }}"></span>
+                                    {{ 'Available' if room.available else 'Occupied' }}
+                                    {% if not room.available %}
+                                    <br><small class="text-secondary">by {{ room.occupied_by }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if room.can_access %}
+                                    <span class="badge bg-success">Accessible</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Restricted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
+                                        <i class="bi bi-shield-check"></i> Check Access
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-function filterRooms() {
-    const search = document.getElementById('searchRoom').value.toLowerCase();
-    const type = document.getElementById('filterType').value;
-    const status = document.getElementById('filterStatus').value;
-    const items = document.querySelectorAll('.room-item');
-    
-    items.forEach(item => {
-        const name = item.querySelector('h6')?.textContent?.toLowerCase() || '';
-        const itemType = item.dataset.type;
-        const itemStatus = item.dataset.status;
-        
-        const matchSearch = name.includes(search);
-        const matchType = type === 'all' || itemType === type;
-        const matchStatus = status === 'all' || itemStatus === status;
-        
-        item.style.display = (matchSearch && matchType && matchStatus) ? '' : 'none';
-    });
+function checkAccess(roomName) {
+    // Redirect to check access page with the room name
+    window.location.href = "{{ url_for('check_access_web') }}?facility=" + encodeURIComponent(roomName);
 }
 </script>
 {% endblock %}

@@ -18,6 +18,12 @@
                 <h4 class="fw-bold">{{ user.full_name }}</h4>
                 <p class="text-secondary mb-3">
                     <span class="badge bg-primary">{{ user.role }}</span>
+                    {% if user.program %}
+                    <span class="badge bg-success">{{ user.program }}</span>
+                    {% endif %}
+                    {% if user.chairperson_college %}
+                    <span class="badge bg-info">{{ user.chairperson_college }}</span>
+                    {% endif %}
                 </p>
 
                 <hr>
@@ -62,11 +68,52 @@
                             {{ user.access_count }}
                         </div>
                     </div>
+                    <!-- Program Field -->
+                    <div class="col-md-12">
+                        <label class="text-secondary d-block mb-1" style="font-size: 0.8rem;">
+                            <i class="bi bi-mortarboard me-1"></i> Program
+                        </label>
+                        <div class="p-2" style="background: var(--primary-dark); border-radius: 8px;">
+                            {% if user.program %}
+                                {{ user.program }}
+                            {% else %}
+                                <span class="text-secondary">Not applicable</span>
+                            {% endif %}
+                        </div>
                     </div>
+                    {% if user.chairperson_college %}
+                    <div class="col-md-12">
+                        <label class="text-secondary d-block mb-1" style="font-size: 0.8rem;">
+                            <i class="bi bi-building me-1"></i> College Oversight
+                        </label>
+                        <div class="p-2" style="background: var(--primary-dark); border-radius: 8px;">
+                            {{ user.chairperson_college }}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <hr>
 
+                <!-- Program-based Access Information -->
+                <div class="text-start">
+                    <h6 class="fw-bold"><i class="bi bi-info-circle me-2"></i>Program Access</h6>
+                    <p class="text-secondary" style="font-size: 0.9rem;">
+                        {% if user.role == 'Student' and user.program %}
+                            You have access to rooms and facilities for: <strong>{{ user.program }}</strong>
+                        {% elif user.role == 'Chairperson' %}
+                            You oversee: <strong>{{ user.chairperson_college }}</strong>
+                        {% else %}
+                            {% if user.role in ['Faculty', 'Staff'] %}
+                                You have general access to facilities.
+                            {% endif %}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 function togglePassword() {

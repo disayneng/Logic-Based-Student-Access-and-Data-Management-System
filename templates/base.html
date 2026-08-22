@@ -593,16 +593,38 @@
         <i class="bi bi-pencil-square"></i> Request Access
     </a>
 
+    <!-- Admin Section - Only visible to Chairperson, Faculty, and Staff -->
+    {% if session.user_type in ['Chairperson', 'Faculty', 'Staff'] %}
+    <div class="nav-section">Administration</div>
+    <a href="{{ url_for('admin') }}" class="nav-link {% if request.endpoint == 'admin' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i> Admin Dashboard
+    </a>
+    <a href="{{ url_for('admin') }}#pending" class="nav-link">
+        <i class="bi bi-clock-history"></i> Approve Requests
+        {% set pending_count = namespace(count=0) %}
+        {% for req in access_requests %}
+            {% if req.status == 'Pending' %}
+                {% set pending_count.count = pending_count.count + 1 %}
+            {% endif %}
+        {% endfor %}
+        {% if pending_count.count > 0 %}
+        <span class="badge bg-danger ms-auto">{{ pending_count.count }}</span>
+        {% endif %}
+    </a>
+    <a href="{{ url_for('admin') }}#approved" class="nav-link">
+        <i class="bi bi-check-circle"></i> Approved Requests
+    </a>
+    {% endif %}
+
     <div class="nav-section">Account</div>
     <a href="{{ url_for('user_profile') }}" class="nav-link {% if request.endpoint == 'user_profile' %}active{% endif %}">
         <i class="bi bi-person-circle"></i> Profile
     </a>
-    {% if session.username %}
-    <a href="{{ url_for('logout') }}" class="nav-link text-danger">
+    <a href="{{ url_for('logout_confirm') }}" class="nav-link text-danger">
         <i class="bi bi-box-arrow-right"></i> Logout
     </a>
-    {% endif %}
 </nav>
+
     <!-- Main Content -->
     <div class="main-content">
         <!-- Top Navbar -->

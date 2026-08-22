@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Smart Campus Navigation{% endblock %}
+
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card animate-in delay-1">
+            <div class="stat-icon blue">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-number">{{ total_users }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card animate-in delay-2">
+            <div class="stat-icon yellow">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="stat-number">{{ pending_requests_count }}</div>
+            <div class="stat-label">Pending Requests</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card animate-in delay-3">
+            <div class="stat-icon green">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stat-number">{{ approved_requests }}</div>
+            <div class="stat-label">Approved Requests</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card animate-in delay-4">
+            <div class="stat-icon purple">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="stat-number">{{ total_rooms }}</div>
+            <div class="stat-label">Total Rooms</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('request_access_web') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Request Access
+                    </a>
+                    <a href="{{ url_for('rooms_facilities') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-building me-2"></i> View All Facilities
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-success">
+                        <i class="bi bi-person-plus me-2"></i> Register New User
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Requests -->
+<div class="row" id="pending">
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2"></i>Pending Access Requests</span>
+                <span class="badge bg-warning">{{ pending_requests_count }}</span>
+            </div>
+            <div class="card-body">
+                {% if pending_requests_count > 0 %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>User</th>
+                                <th>Program</th>
+                                <th>Facility</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in pending_requests %}
+                            <tr>
+                                <td><strong>{{ req.id }}</strong></td>
+                                <td>{{ req.username }}</td>
+                                <td>
+                                    {% for user in all_users %}
+                                        {% if user.username == req.username %}
+                                            {{ user.program if user.program else 'N/A' }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>{{ req.facility_name }}</td>
+                                <td>{{ req.date }}</td>
+                                <td>{{ req.start_hour }}:00 - {{ req.end_hour }}:00</td>
+                                <td>
+                                    <a href="{{ url_for('approve_request', request_id=req.id) }}" 
+                                       class="btn btn-sm btn-success">
+                                        <i class="bi bi-check"></i> Approve
+                                    </a>
+                                    <a href="{{ url_for('reject_request', request_id=req.id) }}" 
+                                       class="btn btn-sm btn-danger">
+                                        <i class="bi bi-x"></i> Reject
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle" style="font-size: 3rem; color: var(--accent-green);"></i>
+                    <p class="text-secondary mt-2">No pending requests</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approved Requests by Program -->
+<div class="row mt-4" id="approved">
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header">
+                <span><i class="bi bi-check-circle me-2"></i>Approved Requests by Program</span>
+            </div>
+            <div class="card-body">
+                {% if approved_by_program %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Program</th>
+                                <th>Approved Requests</th>
+                                <th>Users</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for program, data in approved_by_program.items() %}
+                            <tr>
+                                <td><strong>{{ program }}</strong></td>
+                                <td>{{ data.count }}</td>
+                                <td>{{ data.users|join(', ') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-secondary">No approved requests yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Room Usage by Program -->
+<div class="row mt-4" id="rooms">
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header">
+                <span><i class="bi bi-building me-2"></i>Room & Facility Usage by Program</span>
+            </div>
+            <div class="card-body">
+                {% if room_usage_by_program %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Room/Facility</th>
+                                <th>Program</th>
+                                <th>Status</th>
+                                <th>Currently Used By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in room_usage_by_program %}
+                            <tr>
+                                <td>{{ room.room_name }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ room.program if room.program else 'General' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge-status {{ 'available' if room.available else 'occupied' }}">
+                                        {{ 'Available' if room.available else 'Occupied' }}
+                                    </span>
+                                </td>
+                                <td>{{ room.occupied_by if room.occupied_by else 'None' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-secondary">No room usage data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
