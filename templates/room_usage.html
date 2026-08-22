@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Room Usage - Smart Campus Navigation{% endblock %}
+
+{% block page_title %}Room Usage{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Active Usages -->
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-fill me-2" style="color: var(--accent-green);"></i>Active Usage</span>
+                <span class="badge bg-success">{{ active_usages|length }} active</span>
+            </div>
+            <div class="card-body p-0">
+                {% if active_usages %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>User</th>
+                                <th>Started</th>
+                                <th>Ends At</th>
+                                <th>Duration</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usage in active_usages %}
+                            <tr>
+                                <td><strong>{{ usage.room }}</strong></td>
+                                <td>{{ usage.user }}</td>
+                                <td>{{ usage.start_time }}</td>
+                                <td>{{ usage.end_time }}</td>
+                                <td>{{ usage.duration_minutes }} min</td>
+                                <td>
+                                    <form method="GET" action="{{ url_for('end_usage', usage_index=loop.index0) }}" 
+                                          class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                onclick="return confirm('End usage for {{ usage.room }}?')">
+                                            <i class="bi bi-stop-circle me-1"></i> End
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-clock display-4 d-block text-secondary mb-2"></i>
+                    <p class="text-secondary">No active room usage</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- My Active Usage -->
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-person-clock me-2" style="color: var(--accent-blue);"></i>My Active Usage</span>
+                <span class="badge bg-primary">{{ user_active_usages|length }} active</span>
+            </div>
+            <div class="card-body p-0">
+                {% if user_active_usages %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Started</th>
+                                <th>Ends At</th>
+                                <th>Remaining</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usage in user_active_usages %}
+                            <tr>
+                                <td><strong>{{ usage.room }}</strong></td>
+                                <td>{{ usage.start_time }}</td>
+                                <td>{{ usage.end_time }}</td>
+                                <td>
+                                    {# Calculate remaining time from end_time #}
+                                    <span class="badge-status {% if usage.duration_minutes > 10 %}approved{% else %}denied{% endif %}">
+                                        {{ usage.duration_minutes }} min
+                                    </span>
+                                </td>
+                                <td>
+                                    <form method="GET" action="{{ url_for('end_usage', usage_index=loop.index0) }}" 
+                                          class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-stop-circle me-1"></i> End
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-door-open display-4 d-block text-secondary mb-2"></i>
+                    <p class="text-secondary">You have no active room usage</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage History -->
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2" style="color: var(--accent-purple);"></i>Usage History</span>
+                <span class="badge bg-secondary">{{ all_usages|length }} records</span>
+            </div>
+            <div class="card-body p-0">
+                {% if all_usages %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>User</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usage in all_usages|reverse %}
+                            <tr>
+                                <td>{{ usage.room }}</td>
+                                <td>{{ usage.user }}</td>
+                                <td>{{ usage.start_time }}</td>
+                                <td>{{ usage.end_time }}</td>
+                                <td>{{ usage.duration_minutes }} min</td>
+                                <td>
+                                    <span class="badge-status {{ 'available' if usage.is_active else 'denied' }}">
+                                        {{ 'Active' if usage.is_active else 'Ended' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-calendar2 display-4 d-block text-secondary mb-2"></i>
+                    <p class="text-secondary">No usage history</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh active usage every 30 seconds
+setTimeout(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}
