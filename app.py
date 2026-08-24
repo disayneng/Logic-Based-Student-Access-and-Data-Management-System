@@ -673,7 +673,7 @@ ROOM_DATA = [
 
     {"room_id": "RM-CSSLT-C01", "room_number": "S&T LAB 1", "room_name": "S&T LAB 1", "type": "Laboratory"},
     {"room_id": "RM-CSSLT-C02", "room_number": "S&T LAB 2", "room_name": "S&T LAB 2", "type": "Laboratory"},
-
+    
     # CTE BUILDING
     {"room_id": "RM-CTERM-D01", "room_number": "CTE ROOM 1", "room_name": "CTE ROOM 1", "type": "Classroom"},
     {"room_id": "RM-CTERM-D02", "room_number": "CTE ROOM 2", "room_name": "CTE ROOM 2", "type": "Classroom"},
