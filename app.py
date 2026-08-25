@@ -661,6 +661,29 @@ USER_DATA = [
     {"school_id": "2026-0007", "username": "carlos.mendoza", "role": "Chairperson", "full_name": "Carlos Mendoza", "password": "Chair@123", "program": "", "chairperson_college": "COLLEGE OF SCIENCE AND MANAGEMENT"},
 ]
 
+# =====================================================
+# VISITOR, AUTHORIZED USER, AND RESTRICTED USER DATA
+# =====================================================
+
+# Visitors - Limited access, can only view public areas
+VISITOR_DATA = [
+    {"school_id": "2026-1001", "username": "visitor.juan", "full_name": "Juan Dela Cruz", "password": "Visitor@123", "role": "Visitor"},
+    {"school_id": "2026-1002", "username": "visitor.maria", "full_name": "Maria Reyes", "password": "Visitor@123", "role": "Visitor"},
+]
+
+# Authorized Users - Have special access to specific rooms
+AUTHORIZED_USER_DATA = [
+    {"school_id": "2026-2001", "username": "auth.peter", "full_name": "Peter Parker", "password": "Auth@123", "role": "Student", "program": "BSCS", "authorized_rooms": ["COMLAB 1", "COMLAB 2", "LIBRARY"]},
+    {"school_id": "2026-2002", "username": "auth.tony", "full_name": "Tony Stark", "password": "Auth@123", "role": "Student", "program": "BSES", "authorized_rooms": ["S&T LAB 1", "S&T LAB 2", "ES ROOM 1"]},
+    {"school_id": "2026-2003", "username": "auth.natasha", "full_name": "Natasha Romanoff", "password": "Auth@123", "role": "Faculty", "program": "", "authorized_rooms": ["FACULTY OFFICE", "LIBRARY", "CTE LAB 1", "CTE LAB 2"]},
+]
+
+# Restricted Users - Have limited access, only specific rooms
+RESTRICTED_USER_DATA = [
+    {"school_id": "2026-3001", "username": "rest.steve", "full_name": "Steve Rogers", "password": "Rest@123", "role": "Visitor", "restricted_rooms": ["MAIN GATE", "ADMIN OFFICE"]},
+    {"school_id": "2026-3002", "username": "rest.bucky", "full_name": "Bucky Barnes", "password": "Rest@123", "role": "Student", "program": "BTLED-HE", "restricted_rooms": ["CTE LAB 3", "CTE LAB 4"]},
+]
+
 ROOM_DATA = [
     # CS DEPARTMENT
     {"room_id": "RM-CSLAB-A01", "room_number": "COMLAB 1", "room_name": "COMLAB 1", "type": "Computer Laboratory"},
@@ -742,6 +765,8 @@ faculty = set()
 staff = set()
 chairpersons = set()
 visitors = set()
+authorized_users = set()
+restricted_users = set()
 
 # =====================================================
 # FACILITIES SET
@@ -776,6 +801,8 @@ access_matrix = [
     [1, 0, 0, 0, 1],  # Staff
     [1, 1, 1, 1, 1],  # Chairperson
     [1, 0, 0, 0, 0],  # Visitor
+    [1, 1, 1, 0, 0],  # Authorized User
+    [0, 0, 0, 0, 0],  # Restricted User
 ]
 
 role_to_row = {
@@ -783,7 +810,9 @@ role_to_row = {
     "Faculty": 1,
     "Staff": 2,
     "Chairperson": 3,
-    "Visitor": 4
+    "Visitor": 4,
+    "Authorized": 5,
+    "Restricted": 6
 }
 
 facility_to_col = {
@@ -803,18 +832,23 @@ facility_to_col = {
 # =====================================================
 
 class User:
-    def __init__(self, school_id, username, password, role, full_name, program=""):
+    def __init__(self, school_id, username, password, role, full_name, program="", authorized_rooms=None, restricted_rooms=None):
         self.school_id = school_id
         self.username = username
         self.password = password  # Store original password for display
         self.password_hash = Cryptography.hash_password(password)
         self.role = role
         self.full_name = full_name
-        self.program = program  # Added program field
-        self.chairperson_college = ""  # For chairperson, which college they oversee
+        self.program = program
+        self.chairperson_college = ""
         self.is_authorized = False
         self.secure_code = Cryptography.generate_secure_code()
         self.access_count = 0
+        
+        # New attributes for user classification
+        self.user_type = "Standard"  # Standard, Authorized, Restricted, Visitor
+        self.authorized_rooms = authorized_rooms or []  # Specific rooms authorized user can access
+        self.restricted_rooms = restricted_rooms or []  # Specific rooms restricted user can access
     
     def verify_password(self, password):
         return Cryptography.verify_password(password, self.password_hash)
@@ -829,7 +863,10 @@ class User:
             "program": self.program,
             "chairperson_college": self.chairperson_college,
             "authorized": self.is_authorized,
-            "access_count": self.access_count
+            "access_count": self.access_count,
+            "user_type": self.user_type,
+            "authorized_rooms": self.authorized_rooms,
+            "restricted_rooms": self.restricted_rooms
         }
 
 # =====================================================
@@ -922,13 +959,37 @@ class RoomUsage:
 room_usages = []
 
 # =====================================================
-# ACCESS LOGIC
+# ACCESS LOGIC WITH USER CLASSIFICATION
 # =====================================================
 
 class AccessLogic:
     @staticmethod
     def can_access(user, facility_name):
-        """Check if user can access a facility with time allotment"""
+        """Check if user can access a facility based on their classification"""
+        if not user:
+            return False
+        
+        # Check for Authorized User
+        if user.user_type == "Authorized":
+            if facility_name in user.authorized_rooms:
+                return True
+            return False
+        
+        # Check for Restricted User
+        if user.user_type == "Restricted":
+            if facility_name in user.restricted_rooms:
+                return True
+            return False
+        
+        # Check for Visitor
+        if user.user_type == "Visitor":
+            # Visitors can only access public areas
+            public_areas = ["LIBRARY", "STUDENT ACTIVITY CENTER", "ADMIN OFFICE", "MAIN GATE"]
+            if facility_name in public_areas:
+                return True
+            return False
+        
+        # Standard users (Faculty, Staff, Chairperson, Student)
         if user.role in ["Faculty", "Chairperson"]:
             if facility_name in ["LIBRARY", "COMLAB 1", "COMLAB 2", "COMLAB 3", "COMLAB 4", "S&T LAB 1", "S&T LAB 2", "FACULTY OFFICE"]:
                 return True
@@ -942,19 +1003,38 @@ class AccessLogic:
             for req in access_requests:
                 if req.username == user.username and req.facility_name == facility_name and req.status == "Approved":
                     return True
+            # Check if room matches program
+            if user.program:
+                room_program = ROOM_PROGRAM_MAPPING.get(facility_name, 'General')
+                if room_program == user.program:
+                    return True
         
         return False
     
     @staticmethod
     def can_request_access(user):
+        """Check if user can request access"""
+        if user.user_type in ["Restricted", "Visitor"]:
+            return False
         return user.role in ["Student", "Faculty", "Staff", "Chairperson"]
     
     @staticmethod
-    def evaluate_boolean_access(role, has_request=False, request_approved=False):
+    def evaluate_boolean_access(role, user_type="Standard", has_request=False, request_approved=False):
+        """Evaluate access based on role and user type"""
         is_faculty = role == "Faculty"
         is_chair = role == "Chairperson"
         is_staff = role == "Staff"
         is_student = role == "Student"
+        is_visitor = user_type == "Visitor"
+        is_authorized = user_type == "Authorized"
+        is_restricted = user_type == "Restricted"
+        
+        if is_restricted:
+            return False  # Restricted users have very limited access
+        if is_visitor:
+            return False  # Visitors need special handling
+        if is_authorized:
+            return True  # Authorized users have elevated access
         
         access = is_faculty or is_chair or is_staff or (is_student and has_request and request_approved)
         return bool(access)
@@ -995,16 +1075,26 @@ class AccessLogic:
 # =====================================================
 
 def can_access_room(user, room_name):
-    """Check if user can access a room based on their program"""
+    """Check if user can access a room based on their program and classification"""
     if not user:
         return False
+    
+    # Check user classification first
+    if user.user_type == "Authorized":
+        return room_name in user.authorized_rooms
+    
+    if user.user_type == "Restricted":
+        return room_name in user.restricted_rooms
+    
+    if user.user_type == "Visitor":
+        public_areas = ["LIBRARY", "STUDENT ACTIVITY CENTER", "ADMIN OFFICE", "MAIN GATE"]
+        return room_name in public_areas
     
     # Faculty, Staff, and Chairperson have broader access
     if user.role in ['Faculty', 'Staff']:
         return True
     
     if user.role == 'Chairperson':
-        # Chairperson has access to all rooms in their college
         room_program = ROOM_PROGRAM_MAPPING.get(room_name, 'General')
         if user.chairperson_college == 'COLLEGE OF SCIENCE AND MANAGEMENT':
             if room_program in ['BSCS', 'BSES', 'BSHM', 'CSM']:
@@ -1015,11 +1105,9 @@ def can_access_room(user, room_name):
         return False
     
     if user.role == 'Student':
-        # Students can only access rooms in their program
         room_program = ROOM_PROGRAM_MAPPING.get(room_name, 'General')
         if room_program == user.program:
             return True
-        # Check if they have an approved request for this room
         for req in access_requests:
             if req.username == user.username and req.facility_name == room_name and req.status == 'Approved':
                 return True
@@ -1031,7 +1119,7 @@ def can_access_room(user, room_name):
 # REGISTRATION FUNCTION
 # =====================================================
 
-def register_user(school_id, username, password, role, full_name, program=""):
+def register_user(school_id, username, password, role, full_name, program="", user_type="Standard", authorized_rooms=None, restricted_rooms=None):
     for user in users:
         if user.school_id == school_id:
             return False, "School ID already exists"
@@ -1042,7 +1130,8 @@ def register_user(school_id, username, password, role, full_name, program=""):
     if role not in valid_roles:
         return False, f"Invalid role. Choose from: {', '.join(valid_roles)}"
     
-    new_user = User(school_id, username, password, role, full_name, program)
+    new_user = User(school_id, username, password, role, full_name, program, authorized_rooms, restricted_rooms)
+    new_user.user_type = user_type
     users.append(new_user)
     
     if role == "Student":
@@ -1055,6 +1144,11 @@ def register_user(school_id, username, password, role, full_name, program=""):
         chairpersons.add(username)
     elif role == "Visitor":
         visitors.add(username)
+    
+    if user_type == "Authorized":
+        authorized_users.add(username)
+    elif user_type == "Restricted":
+        restricted_users.add(username)
     
     return True, "User registered successfully"
 
@@ -1075,6 +1169,20 @@ def check_access(username, facility_name, duration_minutes=60):
     
     if facility_name not in facilities_set:
         return False, "Facility does not exist", None
+    
+    # Check based on user type
+    if user.user_type == "Restricted":
+        if facility_name not in user.restricted_rooms:
+            return False, "Access Denied: Restricted user cannot access this facility", None
+    
+    if user.user_type == "Authorized":
+        if facility_name not in user.authorized_rooms:
+            return False, "Access Denied: This facility is not in your authorized list", None
+    
+    if user.user_type == "Visitor":
+        public_areas = ["LIBRARY", "STUDENT ACTIVITY CENTER", "ADMIN OFFICE", "MAIN GATE"]
+        if facility_name not in public_areas:
+            return False, "Access Denied: Visitors can only access public areas", None
     
     row = role_to_row.get(user.role)
     col = facility_to_col.get(facility_name)
@@ -1176,14 +1284,53 @@ def initialize_system():
             user_data["password"],
             user_data["role"],
             user_data["full_name"],
-            user_data.get("program", "")
+            user_data.get("program", ""),
+            "Standard"
         )
-        # Set chairperson college if applicable
         if user_data.get("role") == "Chairperson" and user_data.get("chairperson_college"):
             for u in users:
                 if u.username == user_data["username"]:
                     u.chairperson_college = user_data["chairperson_college"]
                     break
+    
+    # Register Visitors
+    for visitor_data in VISITOR_DATA:
+        register_user(
+            visitor_data["school_id"],
+            visitor_data["username"],
+            visitor_data["password"],
+            "Visitor",
+            visitor_data["full_name"],
+            "",
+            "Visitor"
+        )
+    
+    # Register Authorized Users
+    for auth_data in AUTHORIZED_USER_DATA:
+        register_user(
+            auth_data["school_id"],
+            auth_data["username"],
+            auth_data["password"],
+            auth_data["role"],
+            auth_data["full_name"],
+            auth_data.get("program", ""),
+            "Authorized",
+            auth_data.get("authorized_rooms", [])
+        )
+    
+    # Register Restricted Users
+    for rest_data in RESTRICTED_USER_DATA:
+        register_user(
+            rest_data["school_id"],
+            rest_data["username"],
+            rest_data["password"],
+            rest_data["role"],
+            rest_data["full_name"],
+            rest_data.get("program", ""),
+            "Restricted",
+            None,
+            rest_data.get("restricted_rooms", [])
+        )
     
     global fsm
     fsm = FiniteStateMachine()
@@ -1211,6 +1358,7 @@ def login():
                 session['username'] = username
                 session['user_type'] = user.role
                 session['full_name'] = user.full_name
+                session['user_classification'] = user.user_type
                 flash('Login successful!', 'success')
                 return redirect(url_for('dashboard'))
         
@@ -1241,7 +1389,6 @@ def dashboard():
             user = u
             break
     
-    # Get user data for profile
     user_data = {
         'full_name': user.full_name if user else 'Unknown',
         'school_id': user.school_id if user else 'N/A',
@@ -1250,10 +1397,12 @@ def dashboard():
         'role': user.role if user else 'N/A',
         'program': user.program if user else 'N/A',
         'chairperson_college': user.chairperson_college if user else 'N/A',
-        'access_count': user.access_count if user else 0
+        'access_count': user.access_count if user else 0,
+        'user_type': user.user_type if user else 'Standard',
+        'authorized_rooms': user.authorized_rooms if user else [],
+        'restricted_rooms': user.restricted_rooms if user else []
     }
     
-    # Get room status with access information
     room_status = []
     for room in ROOM_DATA:
         availability = AccessLogic.get_room_availability(room['room_name'])
@@ -1273,16 +1422,14 @@ def dashboard():
             'time_allotted': '60 minutes' if can_access else 'N/A'
         })
     
-    # Get active usage
     active_usages = [usage.to_dict() for usage in room_usages if usage.is_active]
-    
-    # Get user's requests
     user_requests = [req for req in access_requests if req.username == session['username']]
     
     return render_template('dashboard.html',
                          username=session['username'],
                          full_name=session.get('full_name', ''),
                          user_type=user.role if user else 'Unknown',
+                         user_classification=user.user_type if user else 'Standard',
                          total_users=len(users),
                          total_requests=len(access_requests),
                          pending_requests=len([r for r in access_requests if r.status == 'Pending']),
@@ -1298,14 +1445,12 @@ def dashboard():
 
 @app.route('/logout_confirm')
 def logout_confirm():
-    """Show logout confirmation page"""
     if 'username' not in session:
         return redirect(url_for('login'))
     return render_template('logout_confirm.html')
 
 @app.route('/logout_do', methods=['POST'])
 def logout_do():
-    """Confirm logout"""
     if 'username' not in session:
         return redirect(url_for('login'))
     fsm.transition(FiniteStateMachine.STATES['EXIT'])
@@ -1382,12 +1527,11 @@ def request_access_web():
             user = u
             break
     
-    # Allow all users except visitors to request access
-    if user and user.role == 'Visitor':
-        flash('Visitors cannot request access', 'error')
+    # Check if user can request access
+    if not AccessLogic.can_request_access(user):
+        flash('Your user type does not allow access requests', 'error')
         return redirect(url_for('dashboard'))
     
-    # Get all rooms and facilities for the dropdown
     all_facilities = []
     for room in ROOM_DATA:
         if room['room_name'] not in all_facilities:
@@ -1400,7 +1544,6 @@ def request_access_web():
         end_hour = int(request.form.get('end_hour'))
         purpose = request.form.get('purpose')
         
-        # Validate time
         if start_hour >= end_hour:
             flash('End time must be after start time', 'error')
             return render_template('request_access.html', facilities=all_facilities)
@@ -1430,7 +1573,6 @@ def admin():
     pending = [req for req in access_requests if req.status == 'Pending']
     approved = [req for req in access_requests if req.status == 'Approved']
     
-    # Get approved requests by program
     approved_by_program = {}
     for req in approved:
         req_user = None
@@ -1445,7 +1587,6 @@ def admin():
         if req_user and req_user.username not in approved_by_program[program]['users']:
             approved_by_program[program]['users'].append(req_user.username)
     
-    # Get room usage by program
     room_usage_by_program = []
     for room in ROOM_DATA:
         availability = AccessLogic.get_room_availability(room['room_name'])
@@ -1458,15 +1599,24 @@ def admin():
             'occupied_by': availability['occupied_by'] if not availability['available'] else None
         })
     
+    # User classification statistics
+    user_stats = {
+        'standard_users': len([u for u in users if u.user_type == 'Standard']),
+        'authorized_users': len([u for u in users if u.user_type == 'Authorized']),
+        'restricted_users': len([u for u in users if u.user_type == 'Restricted']),
+        'visitors': len([u for u in users if u.user_type == 'Visitor']),
+    }
+    
     return render_template('admin.html',
                          pending_requests=pending,
                          total_users=len(users),
-                         pending_requests_count=len(pending),  # Add this line
+                         pending_requests_count=len(pending),
                          approved_requests=len(approved),
                          total_rooms=len(ROOM_DATA),
                          approved_by_program=approved_by_program,
                          room_usage_by_program=room_usage_by_program,
-                         all_users=users)
+                         all_users=users,
+                         user_stats=user_stats)
     
 @app.route('/admin/approve/<request_id>')
 def approve_request(request_id):
@@ -1522,17 +1672,17 @@ def register():
         role = request.form.get('role')
         program = request.form.get('program', '')
         chairperson_college = request.form.get('chairperson_college', '')
+        user_type = request.form.get('user_type', 'Standard')
         
-        # Validate fields
         if not full_name or not school_id or not username or not password or not role:
             flash('All fields are required', 'error')
             return render_template('register.html', 
                                  program_options=PROGRAM_OPTIONS,
                                  selected_role=role,
                                  selected_program=program,
+                                 selected_user_type=user_type,
                                  form_data=request.form)
         
-        # Check if user exists
         for user in users:
             if user.school_id == school_id:
                 flash('School ID already exists', 'error')
@@ -1541,23 +1691,19 @@ def register():
                 flash('Username already exists', 'error')
                 return render_template('register.html', program_options=PROGRAM_OPTIONS)
         
-        # Validate program for students
         if role == 'Student' and not program:
             flash('Program is required for students', 'error')
             return render_template('register.html', program_options=PROGRAM_OPTIONS)
         
-        # Validate chairperson college
         if role == 'Chairperson' and not chairperson_college:
             flash('College oversight is required for Chairperson', 'error')
             return render_template('register.html', program_options=PROGRAM_OPTIONS)
         
-        # Create user
         new_user = User(school_id, username, password, role, full_name, program)
-        if role == 'Chairperson':
-            new_user.chairperson_college = chairperson_college
+        new_user.user_type = user_type
+        new_user.chairperson_college = chairperson_college if role == 'Chairperson' else ''
         users.append(new_user)
         
-        # Add to sets
         if role == "Student":
             students.add(username)
         elif role == "Faculty":
@@ -1568,6 +1714,11 @@ def register():
             chairpersons.add(username)
         elif role == "Visitor":
             visitors.add(username)
+        
+        if user_type == "Authorized":
+            authorized_users.add(username)
+        elif user_type == "Restricted":
+            restricted_users.add(username)
         
         flash('User registered successfully!', 'success')
         return redirect(url_for('login'))
@@ -1580,7 +1731,6 @@ def register():
 
 @app.route('/navigation')
 def navigation():
-    """Graph-based navigation page"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1593,7 +1743,6 @@ def navigation():
 
 @app.route('/find_route', methods=['POST'])
 def find_route():
-    """Find shortest route between locations"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1615,7 +1764,6 @@ def find_route():
 
 @app.route('/encrypt', methods=['GET', 'POST'])
 def encrypt_message_web():
-    """Encrypt/decrypt messages"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1641,7 +1789,6 @@ def encrypt_message_web():
 
 @app.route('/campus_tree')
 def campus_tree_view():
-    """View campus organization tree"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1654,7 +1801,6 @@ def campus_tree_view():
 
 @app.route('/fsm_status')
 def fsm_status():
-    """View FSM status"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1665,7 +1811,6 @@ def fsm_status():
 
 @app.route('/probability_stats')
 def probability_stats():
-    """View probability and statistics"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1699,7 +1844,6 @@ def probability_stats():
 
 @app.route('/secure_messages')
 def secure_messages():
-    """View secure messages"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1717,7 +1861,6 @@ def secure_messages():
 
 @app.route('/user_profile')
 def user_profile():
-    """View user profile"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1737,7 +1880,6 @@ def user_profile():
 
 @app.route('/rooms_facilities')
 def rooms_facilities():
-    """View rooms and facilities with access and availability"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1753,13 +1895,28 @@ def rooms_facilities():
         can_access = can_access_room(user, room['room_name']) if user else False
         program = ROOM_PROGRAM_MAPPING.get(room['room_name'], 'General')
         
-        # Check if user has an approved request for this room
         has_approved_request = False
         if user:
             for req in access_requests:
                 if req.username == user.username and req.facility_name == room['room_name'] and req.status == 'Approved':
                     has_approved_request = True
                     break
+        
+        # Determine access reason based on user type
+        access_reason = "No Access"
+        if can_access:
+            if user.user_type == "Authorized":
+                access_reason = "Authorized User"
+            elif user.user_type == "Restricted":
+                access_reason = "Restricted Access"
+            elif user.user_type == "Visitor":
+                access_reason = "Public Area"
+            elif user.role in ["Faculty", "Staff", "Chairperson"]:
+                access_reason = "Staff/Faculty Access"
+            elif user.role == "Student" and has_approved_request:
+                access_reason = "Approved Request"
+            else:
+                access_reason = "Program Access"
         
         room_status.append({
             'room_id': room['room_id'],
@@ -1771,17 +1928,26 @@ def rooms_facilities():
             'occupied_by': availability['occupied_by'] if not availability['available'] else None,
             'until': availability['until'] if not availability['available'] else None,
             'can_access': can_access,
+            'access_reason': access_reason,
             'has_approved_request': has_approved_request,
             'time_allotted': '60 minutes' if can_access else 'N/A'
         })
     
+    # User classification summary
+    classification_summary = {
+        'standard_count': len([u for u in users if u.user_type == 'Standard']),
+        'authorized_count': len([u for u in users if u.user_type == 'Authorized']),
+        'restricted_count': len([u for u in users if u.user_type == 'Restricted']),
+        'visitor_count': len([u for u in users if u.user_type == 'Visitor']),
+    }
+    
     return render_template('rooms_facilities.html',
                          room_status=room_status,
+                         classification_summary=classification_summary,
                          fsm_state=fsm.get_state())
 
 @app.route('/room_usage')
 def room_usage_view():
-    """View room usage and end usage"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1795,7 +1961,6 @@ def room_usage_view():
     all_usages = []
     user_active_usages = []
     
-    # Convert RoomUsage objects to dictionaries
     for usage in room_usages:
         usage_dict = usage.to_dict()
         all_usages.append(usage_dict)
@@ -1813,7 +1978,6 @@ def room_usage_view():
 
 @app.route('/end_usage/<int:usage_index>')
 def end_usage(usage_index):
-    """End room usage"""
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -1828,17 +1992,6 @@ def end_usage(usage_index):
         flash('Usage record not found', 'error')
     
     return redirect(url_for('room_usage_view'))
-
-# =====================================================
-# TEMPLATE CONTEXT PROCESSOR
-# =====================================================
-
-@app.context_processor
-def utility_processor():
-    return {
-        'fsm_states': FiniteStateMachine.STATES,
-        'get_fsm_state': lambda: fsm.get_state()
-    }
 
 # =====================================================
 # RUN APPLICATION
