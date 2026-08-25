@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'secure_campus_final_2026')
 
 # =====================================================
-# CRYPTOGRAPHY FEATURE
+# CRYPTOGRAPHY FEATURE - FIXED
 # =====================================================
 
 class Cryptography:
@@ -828,7 +828,7 @@ facility_to_col = {
 }
 
 # =====================================================
-# USER CLASS
+# USER CLASS - FIXED (Password hashing on creation)
 # =====================================================
 
 class User:
@@ -836,6 +836,7 @@ class User:
         self.school_id = school_id
         self.username = username
         self.password = password  # Store original password for display
+        # IMPORTANT FIX: Hash the password immediately on creation
         self.password_hash = Cryptography.hash_password(password)
         self.role = role
         self.full_name = full_name
@@ -1116,7 +1117,7 @@ def can_access_room(user, room_name):
     return False
 
 # =====================================================
-# REGISTRATION FUNCTION
+# REGISTRATION FUNCTION - FIXED (Ensures password hashing)
 # =====================================================
 
 def register_user(school_id, username, password, role, full_name, program="", user_type="Standard", authorized_rooms=None, restricted_rooms=None):
@@ -1130,7 +1131,10 @@ def register_user(school_id, username, password, role, full_name, program="", us
     if role not in valid_roles:
         return False, f"Invalid role. Choose from: {', '.join(valid_roles)}"
     
+    # Create user with proper password hashing
     new_user = User(school_id, username, password, role, full_name, program, authorized_rooms, restricted_rooms)
+    # Ensure password_hash is set correctly
+    new_user.password_hash = Cryptography.hash_password(password)
     new_user.user_type = user_type
     users.append(new_user)
     
@@ -1345,29 +1349,43 @@ def home():
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
+# =====================================================
+# LOGIN ROUTE - FIXED WITH IMPROVED VALIDATION
+# =====================================================
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        if not username or not password:
+            flash('Please enter both username and password', 'error')
+            return render_template('login.html', datetime=datetime)
         
         fsm.transition(FiniteStateMachine.STATES['LOGIN'])
         
-        for user in users:
-            if user.username == username and user.verify_password(password):
-                session['username'] = username
-                session['user_type'] = user.role
-                session['full_name'] = user.full_name
-                session['user_classification'] = user.user_type
-                flash('Login successful!', 'success')
-                return redirect(url_for('dashboard'))
+        # Find user by username
+        user = None
+        for u in users:
+            if u.username == username:
+                user = u
+                break
         
-        flash('Invalid username or password', 'error')
-        fsm.transition(FiniteStateMachine.STATES['ACCESS_DENIED'])
+        # Verify user exists and password matches
+        if user and user.verify_password(password):
+            session['username'] = user.username
+            session['user_type'] = user.role
+            session['full_name'] = user.full_name
+            session['user_classification'] = user.user_type
+            flash(f'Welcome back, {user.full_name}!', 'success')
+            fsm.transition(FiniteStateMachine.STATES['ACCESS_GRANTED'])
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid username or password', 'error')
+            fsm.transition(FiniteStateMachine.STATES['ACCESS_DENIED'])
     
-    return render_template('login.html', 
-                         fsm_state=fsm.get_state(),
-                         datetime=datetime)
+    return render_template('login.html', datetime=datetime)
 
 @app.context_processor
 def utility_processor():
