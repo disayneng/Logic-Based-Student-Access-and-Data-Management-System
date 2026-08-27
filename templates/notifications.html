@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Smart Campus Navigation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-dark: #0a0e1a;
+            --primary-card: #141b2d;
+            --primary-card-hover: #1a2438;
+            --accent-blue: #4f8cff;
+            --accent-purple: #7c5cfc;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --accent-yellow: #f1c40f;
+            --text-primary: #e8edf5;
+            --text-secondary: #8a9bb5;
+            --border-color: #2a3a55;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1a2e 50%, #16213e 100%);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Bubbles Container */
+        .bubbles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -150px;
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: bubbleRise linear infinite;
+            will-change: transform;
+            transition: opacity 0.3s ease;
+        }
+
+        .bubble::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 25%;
+            width: 30%;
+            height: 20%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent);
+            opacity: 0.6;
+        }
+
+        .bubble::after {
+            content: '';
+            position: absolute;
+            bottom: 20%;
+            right: 20%;
+            width: 15%;
+            height: 12%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.15), transparent);
+            opacity: 0.4;
+        }
+
+        .bubble:nth-child(1) {
+            width: 100px;
+            height: 100px;
+            left: 5%;
+            animation-duration: 23s;
+            animation-delay: 0s;
+            background: radial-gradient(circle at 35% 35%, rgba(79, 140, 255, 0.25), rgba(79, 140, 255, 0.05));
+            box-shadow: inset -10px -10px 30px rgba(0,0,0,0.2), 0 0 20px rgba(79, 140, 255, 0.05);
+            border: 1px solid rgba(79, 140, 255, 0.08);
+        }
+
+        .bubble:nth-child(2) {
+            width: 140px;
+            height: 140px;
+            left: 15%;
+            animation-duration: 27s;
+            animation-delay: 2s;
+            background: radial-gradient(circle at 30% 30%, rgba(124, 92, 252, 0.2), rgba(124, 92, 252, 0.04));
+            box-shadow: inset -15px -15px 40px rgba(0,0,0,0.2), 0 0 25px rgba(124, 92, 252, 0.04);
+            border: 1px solid rgba(124, 92, 252, 0.06);
+        }
+
+        .bubble:nth-child(3) {
+            width: 70px;
+            height: 70px;
+            left: 25%;
+            animation-duration: 20s;
+            animation-delay: 3.3s;
+            background: radial-gradient(circle at 40% 30%, rgba(46, 204, 113, 0.2), rgba(46, 204, 113, 0.04));
+            box-shadow: inset -8px -8px 20px rgba(0,0,0,0.2), 0 0 15px rgba(46, 204, 113, 0.04);
+            border: 1px solid rgba(46, 204, 113, 0.06);
+        }
+
+        .bubble:nth-child(4) {
+            width: 180px;
+            height: 180px;
+            left: 35%;
+            animation-duration: 30s;
+            animation-delay: 1.3s;
+            background: radial-gradient(circle at 25% 35%, rgba(79, 140, 255, 0.15), rgba(79, 140, 255, 0.03));
+            box-shadow: inset -20px -20px 50px rgba(0,0,0,0.15), 0 0 30px rgba(79, 140, 255, 0.03);
+            border: 1px solid rgba(79, 140, 255, 0.04);
+        }
+
+        .bubble:nth-child(5) {
+            width: 90px;
+            height: 90px;
+            left: 48%;
+            animation-duration: 21s;
+            animation-delay: 2.7s;
+            background: radial-gradient(circle at 30% 40%, rgba(231, 76, 60, 0.15), rgba(231, 76, 60, 0.03));
+            box-shadow: inset -10px -10px 30px rgba(0,0,0,0.2), 0 0 15px rgba(231, 76, 60, 0.03);
+            border: 1px solid rgba(231, 76, 60, 0.05);
+        }
+
+        .bubble:nth-child(6) {
+            width: 55px;
+            height: 55px;
+            left: 58%;
+            animation-duration: 19s;
+            animation-delay: 4s;
+            background: radial-gradient(circle at 35% 25%, rgba(241, 196, 15, 0.2), rgba(241, 196, 15, 0.04));
+            box-shadow: inset -6px -6px 18px rgba(0,0,0,0.2), 0 0 12px rgba(241, 196, 15, 0.03);
+            border: 1px solid rgba(241, 196, 15, 0.06);
+        }
+
+        .bubble:nth-child(7) {
+            width: 160px;
+            height: 160px;
+            left: 68%;
+            animation-duration: 28s;
+            animation-delay: 2s;
+            background: radial-gradient(circle at 30% 30%, rgba(124, 92, 252, 0.15), rgba(124, 92, 252, 0.03));
+            box-shadow: inset -18px -18px 45px rgba(0,0,0,0.15), 0 0 25px rgba(124, 92, 252, 0.03);
+            border: 1px solid rgba(124, 92, 252, 0.04);
+        }
+
+        .bubble:nth-child(8) {
+            width: 80px;
+            height: 80px;
+            left: 80%;
+            animation-duration: 22s;
+            animation-delay: 3.3s;
+            background: radial-gradient(circle at 40% 30%, rgba(79, 140, 255, 0.2), rgba(79, 140, 255, 0.04));
+            box-shadow: inset -8px -8px 25px rgba(0,0,0,0.2), 0 0 18px rgba(79, 140, 255, 0.04);
+            border: 1px solid rgba(79, 140, 255, 0.06);
+        }
+
+        .bubble:nth-child(9) {
+            width: 45px;
+            height: 45px;
+            left: 92%;
+            animation-duration: 17s;
+            animation-delay: 1.3s;
+            background: radial-gradient(circle at 30% 30%, rgba(46, 204, 113, 0.2), rgba(46, 204, 113, 0.05));
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.2), 0 0 10px rgba(46, 204, 113, 0.04);
+            border: 1px solid rgba(46, 204, 113, 0.06);
+        }
+
+        .bubble:nth-child(10) {
+            width: 110px;
+            height: 110px;
+            left: 10%;
+            animation-duration: 25s;
+            animation-delay: 4.7s;
+            background: radial-gradient(circle at 25% 35%, rgba(231, 76, 60, 0.12), rgba(231, 76, 60, 0.02));
+            box-shadow: inset -12px -12px 35px rgba(0,0,0,0.2), 0 0 20px rgba(231, 76, 60, 0.02);
+            border: 1px solid rgba(231, 76, 60, 0.04);
+        }
+
+        @keyframes bubbleRise {
+            0% {
+                transform: translateY(0) scale(0.8) rotate(0deg) translateX(0);
+                opacity: 0;
+            }
+            5% {
+                opacity: 0.5;
+            }
+            10% {
+                opacity: 0.8;
+                transform: translateY(-10vh) scale(0.9) rotate(2deg) translateX(5px);
+            }
+            50% {
+                opacity: 0.9;
+                transform: translateY(-50vh) scale(1) rotate(5deg) translateX(-5px);
+            }
+            85% {
+                opacity: 0.7;
+                transform: translateY(-85vh) scale(1.1) rotate(8deg) translateX(8px);
+            }
+            95% {
+                opacity: 0.3;
+                transform: translateY(-95vh) scale(1.2) rotate(10deg) translateX(-3px);
+            }
+            100% {
+                transform: translateY(-110vh) scale(1.3) rotate(12deg) translateX(0);
+                opacity: 0;
+            }
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(20, 27, 45, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+            z-index: 1;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .navbar-brand i {
+            color: var(--accent-blue);
+            margin-right: 8px;
+        }
+
+        .nav-link {
+            color: var(--text-secondary) !important;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary) !important;
+        }
+
+        .main-container {
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-header h2 {
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .page-header h2 i {
+            -webkit-text-fill-color: var(--accent-blue);
+            margin-right: 10px;
+        }
+
+        .page-header .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .fsm-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .fsm-badge.active {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        /* Notification Cards */
+        .notification-card {
+            background: rgba(20, 27, 45, 0.92);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 22px 28px;
+            margin-bottom: 14px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .notification-card:hover {
+            background: rgba(26, 36, 56, 0.95);
+            border-color: var(--accent-blue);
+            transform: translateX(8px);
+            box-shadow: 0 6px 30px rgba(79, 140, 255, 0.1);
+        }
+
+        .notification-card.unread {
+            border-left: 4px solid var(--accent-blue);
+            background: rgba(20, 27, 45, 0.95);
+        }
+
+        .notification-card.read {
+            opacity: 0.75;
+        }
+
+        .notification-card .notif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .notification-card .notif-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+        }
+
+        .notification-card .notif-title .badge-new {
+            background: var(--accent-blue);
+            color: white;
+            font-size: 0.55rem;
+            padding: 2px 10px;
+            border-radius: 12px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .notification-card .notif-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .notification-card .notif-message {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .notification-card .notif-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .notification-card .notif-badge {
+            display: inline-block;
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-approval {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--accent-green);
+        }
+
+        .badge-rejection {
+            background: rgba(231, 76, 60, 0.2);
+            color: var(--accent-red);
+        }
+
+        .badge-info {
+            background: rgba(79, 140, 255, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .badge-warning {
+            background: rgba(241, 196, 15, 0.2);
+            color: var(--accent-yellow);
+        }
+
+        .notification-card .notif-request-id {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Buttons */
+        .btn-outline-primary {
+            color: var(--accent-blue);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 18px;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 140, 255, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border: none;
+            border-radius: 10px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(79, 140, 255, 0.3);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 70px 20px;
+            color: var(--text-secondary);
+            background: rgba(20, 27, 45, 0.6);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            color: var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .empty-state h4 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            max-width: 400px;
+            margin: 0 auto 0;
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 14px 20px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .alert-success {
+            background: rgba(46, 204, 113, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(46, 204, 113, 0.1);
+        }
+
+        .alert-danger {
+            background: rgba(231, 76, 60, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(231, 76, 60, 0.1);
+        }
+
+        .alert-info {
+            background: rgba(79, 140, 255, 0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(79, 140, 255, 0.1);
+        }
+
+        .alert .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.5;
+        }
+
+        .alert .btn-close:hover {
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 15px;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .page-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .notification-card {
+                padding: 18px 20px;
+            }
+
+            .notification-card .notif-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .bubble {
+                display: none;
+            }
+            .bubble:nth-child(1),
+            .bubble:nth-child(2),
+            .bubble:nth-child(3),
+            .bubble:nth-child(4),
+            .bubble:nth-child(5) {
+                display: block;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <!-- Bubbles Background -->
+    <div class="bubbles">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-buildings"></i> BISaUrch
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="fsm-badge {% if fsm_state == 'Access Granted' %}active{% endif %}">
+                    <i class="bi bi-diagram-3"></i> {{ fsm_state }}
+                </span>
+                <a href="{{ url_for('dashboard') }}" class="nav-link">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'error' %}x-circle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>
+                <i class="bi bi-bell"></i> Notifications
+            </h2>
+            <div class="header-actions">
+                {% if notifications %}
+                    <a href="{{ url_for('mark_all_notifications_read_route') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-check2-all"></i> Mark All Read
+                    </a>
+                {% endif %}
+                <span class="fsm-badge">
+                    <i class="bi bi-envelope"></i> {{ notifications|length }} Total
+                </span>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        {% if notifications %}
+            {% for notif in notifications %}
+                <div class="notification-card {% if not notif.is_read %}unread{% else %}read{% endif %}"
+                     onclick="window.location.href='{{ url_for('mark_notification_read_route', notification_id=notif.id) }}'">
+                    <div class="notif-header">
+                        <span class="notif-title">
+                            {{ notif.title }}
+                            {% if not notif.is_read %}
+                                <span class="badge-new">New</span>
+                            {% endif %}
+                        </span>
+                        <span class="notif-time">
+                            <i class="bi bi-clock"></i> {{ notif.time_ago }}
+                        </span>
+                    </div>
+                    <div class="notif-message">
+                        {{ notif.message }}
+                    </div>
+                    <div class="notif-footer">
+                        <span class="notif-badge badge-{{ notif.notification_type }}">
+                            <i class="bi bi-{% if notif.notification_type == 'approval' %}check-circle{% elif notif.notification_type == 'rejection' %}x-circle{% elif notif.notification_type == 'info' %}info-circle{% else %}exclamation-triangle{% endif %}"></i>
+                            {{ notif.notification_type|capitalize }}
+                        </span>
+                        {% if notif.request_id %}
+                            <span class="notif-request-id">
+                                <i class="bi bi-hash"></i> Request: {{ notif.request_id }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-bell-slash"></i>
+                <h4>No Notifications</h4>
+                <p>You don't have any notifications yet. When your access requests are reviewed, you'll be notified here.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-hide alerts after 5 seconds
+        document.querySelectorAll('.alert').forEach(alert => {
+            setTimeout(() => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            }, 5000);
+        });
+
+        // Auto-refresh notification count periodically
+        function updateNotificationCount() {
+            fetch('{{ url_for("get_unread_count") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.querySelector('.notification-badge');
+                    if (badge) {
+                        if (data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'inline';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching notification count:', error));
+        }
+
+        // Update every 30 seconds
+        setInterval(updateNotificationCount, 30000);
+    </script>
+</body>
+</html>

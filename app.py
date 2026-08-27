@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from datetime import datetime, date, timedelta
 import math
 import os
@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'secure_campus_final_2026')
 
 # =====================================================
-# CRYPTOGRAPHY FEATURE - FIXED
+# CRYPTOGRAPHY FEATURE
 # =====================================================
 
 class Cryptography:
@@ -828,15 +828,14 @@ facility_to_col = {
 }
 
 # =====================================================
-# USER CLASS - FIXED (Password hashing on creation)
+# USER CLASS
 # =====================================================
 
 class User:
     def __init__(self, school_id, username, password, role, full_name, program="", authorized_rooms=None, restricted_rooms=None):
         self.school_id = school_id
         self.username = username
-        self.password = password  # Store original password for display
-        # IMPORTANT FIX: Hash the password immediately on creation
+        self.password = password
         self.password_hash = Cryptography.hash_password(password)
         self.role = role
         self.full_name = full_name
@@ -845,11 +844,9 @@ class User:
         self.is_authorized = False
         self.secure_code = Cryptography.generate_secure_code()
         self.access_count = 0
-        
-        # New attributes for user classification
-        self.user_type = "Standard"  # Standard, Authorized, Restricted, Visitor
-        self.authorized_rooms = authorized_rooms or []  # Specific rooms authorized user can access
-        self.restricted_rooms = restricted_rooms or []  # Specific rooms restricted user can access
+        self.user_type = "Standard"
+        self.authorized_rooms = authorized_rooms or []
+        self.restricted_rooms = restricted_rooms or []
     
     def verify_password(self, password):
         return Cryptography.verify_password(password, self.password_hash)
@@ -960,6 +957,98 @@ class RoomUsage:
 room_usages = []
 
 # =====================================================
+# NOTIFICATION SYSTEM
+# =====================================================
+
+class Notification:
+    """Notification system for access request updates"""
+    
+    def __init__(self, user_id, title, message, notification_type, request_id=None):
+        self.id = f"NOTIF-{datetime.now().strftime('%Y%m%d%H%M%S')}-{random.randint(100, 999)}"
+        self.user_id = user_id
+        self.title = title
+        self.message = message
+        self.notification_type = notification_type  # 'approval', 'rejection', 'info', 'warning'
+        self.request_id = request_id
+        self.timestamp = datetime.now()
+        self.is_read = False
+    
+    def mark_as_read(self):
+        self.is_read = True
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'title': self.title,
+            'message': self.message,
+            'notification_type': self.notification_type,
+            'request_id': self.request_id,
+            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_read': self.is_read,
+            'time_ago': self.get_time_ago()
+        }
+    
+    def get_time_ago(self):
+        """Get time ago string"""
+        diff = datetime.now() - self.timestamp
+        seconds = diff.total_seconds()
+        
+        if seconds < 60:
+            return f"{int(seconds)} seconds ago"
+        elif seconds < 3600:
+            return f"{int(seconds / 60)} minutes ago"
+        elif seconds < 86400:
+            return f"{int(seconds / 3600)} hours ago"
+        else:
+            return f"{int(seconds / 86400)} days ago"
+
+# =====================================================
+# NOTIFICATION STORAGE
+# =====================================================
+
+notifications = []
+
+# =====================================================
+# NOTIFICATION FUNCTIONS
+# =====================================================
+
+def create_notification(username, title, message, notification_type, request_id=None):
+    """Create and store a notification for a user"""
+    notif = Notification(username, title, message, notification_type, request_id)
+    notifications.append(notif)
+    return notif
+
+def get_user_notifications(username):
+    """Get all notifications for a user"""
+    return [n for n in notifications if n.user_id == username]
+
+def get_unread_notifications(username):
+    """Get unread notifications for a user"""
+    return [n for n in notifications if n.user_id == username and not n.is_read]
+
+def mark_notification_read(notification_id):
+    """Mark a notification as read"""
+    for n in notifications:
+        if n.id == notification_id:
+            n.mark_as_read()
+            return True
+    return False
+
+def mark_all_notifications_read(username):
+    """Mark all notifications as read for a user"""
+    count = 0
+    for n in notifications:
+        if n.user_id == username and not n.is_read:
+            n.mark_as_read()
+            count += 1
+    return count
+
+def get_notification_count(username):
+    """Get unread notification count for a user"""
+    return len(get_unread_notifications(username))
+
+# =====================================================
 # ACCESS LOGIC WITH USER CLASSIFICATION
 # =====================================================
 
@@ -984,7 +1073,6 @@ class AccessLogic:
         
         # Check for Visitor
         if user.user_type == "Visitor":
-            # Visitors can only access public areas
             public_areas = ["LIBRARY", "STUDENT ACTIVITY CENTER", "ADMIN OFFICE", "MAIN GATE"]
             if facility_name in public_areas:
                 return True
@@ -1000,11 +1088,9 @@ class AccessLogic:
                 return True
         
         if user.role == "Student":
-            # Check for approved requests
             for req in access_requests:
                 if req.username == user.username and req.facility_name == facility_name and req.status == "Approved":
                     return True
-            # Check if room matches program
             if user.program:
                 room_program = ROOM_PROGRAM_MAPPING.get(facility_name, 'General')
                 if room_program == user.program:
@@ -1031,11 +1117,11 @@ class AccessLogic:
         is_restricted = user_type == "Restricted"
         
         if is_restricted:
-            return False  # Restricted users have very limited access
+            return False
         if is_visitor:
-            return False  # Visitors need special handling
+            return False
         if is_authorized:
-            return True  # Authorized users have elevated access
+            return True
         
         access = is_faculty or is_chair or is_staff or (is_student and has_request and request_approved)
         return bool(access)
@@ -1080,7 +1166,6 @@ def can_access_room(user, room_name):
     if not user:
         return False
     
-    # Check user classification first
     if user.user_type == "Authorized":
         return room_name in user.authorized_rooms
     
@@ -1091,7 +1176,6 @@ def can_access_room(user, room_name):
         public_areas = ["LIBRARY", "STUDENT ACTIVITY CENTER", "ADMIN OFFICE", "MAIN GATE"]
         return room_name in public_areas
     
-    # Faculty, Staff, and Chairperson have broader access
     if user.role in ['Faculty', 'Staff']:
         return True
     
@@ -1117,7 +1201,7 @@ def can_access_room(user, room_name):
     return False
 
 # =====================================================
-# REGISTRATION FUNCTION - FIXED (Ensures password hashing)
+# REGISTRATION FUNCTION
 # =====================================================
 
 def register_user(school_id, username, password, role, full_name, program="", user_type="Standard", authorized_rooms=None, restricted_rooms=None):
@@ -1131,10 +1215,7 @@ def register_user(school_id, username, password, role, full_name, program="", us
     if role not in valid_roles:
         return False, f"Invalid role. Choose from: {', '.join(valid_roles)}"
     
-    # Create user with proper password hashing
     new_user = User(school_id, username, password, role, full_name, program, authorized_rooms, restricted_rooms)
-    # Ensure password_hash is set correctly
-    new_user.password_hash = Cryptography.hash_password(password)
     new_user.user_type = user_type
     users.append(new_user)
     
@@ -1174,7 +1255,6 @@ def check_access(username, facility_name, duration_minutes=60):
     if facility_name not in facilities_set:
         return False, "Facility does not exist", None
     
-    # Check based on user type
     if user.user_type == "Restricted":
         if facility_name not in user.restricted_rooms:
             return False, "Access Denied: Restricted user cannot access this facility", None
@@ -1196,7 +1276,6 @@ def check_access(username, facility_name, duration_minutes=60):
     
     matrix_permission = access_matrix[row][col]
     
-    # Check if room is available
     availability = AccessLogic.get_room_availability(facility_name)
     if not availability['available']:
         return False, f"Room is occupied by {availability['occupied_by']} until {availability['until'].strftime('%H:%M')}", None
@@ -1218,7 +1297,6 @@ def check_access(username, facility_name, duration_minutes=60):
         user.access_count += 1
         fsm.transition(FiniteStateMachine.STATES['ACCESS_GRANTED'])
         
-        # Assign time allotment
         usage = AccessLogic.assign_room_time(facility_name, username, duration_minutes)
         return True, f"Access Granted. You have {duration_minutes} minutes.", usage
     else:
@@ -1297,7 +1375,6 @@ def initialize_system():
                     u.chairperson_college = user_data["chairperson_college"]
                     break
     
-    # Register Visitors
     for visitor_data in VISITOR_DATA:
         register_user(
             visitor_data["school_id"],
@@ -1309,7 +1386,6 @@ def initialize_system():
             "Visitor"
         )
     
-    # Register Authorized Users
     for auth_data in AUTHORIZED_USER_DATA:
         register_user(
             auth_data["school_id"],
@@ -1322,7 +1398,6 @@ def initialize_system():
             auth_data.get("authorized_rooms", [])
         )
     
-    # Register Restricted Users
     for rest_data in RESTRICTED_USER_DATA:
         register_user(
             rest_data["school_id"],
@@ -1349,10 +1424,6 @@ def home():
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
-# =====================================================
-# LOGIN ROUTE - FIXED WITH IMPROVED VALIDATION
-# =====================================================
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -1365,14 +1436,12 @@ def login():
         
         fsm.transition(FiniteStateMachine.STATES['LOGIN'])
         
-        # Find user by username
         user = None
         for u in users:
             if u.username == username:
                 user = u
                 break
         
-        # Verify user exists and password matches
         if user and user.verify_password(password):
             session['username'] = user.username
             session['user_type'] = user.role
@@ -1393,7 +1462,9 @@ def utility_processor():
     return {
         'fsm_states': FiniteStateMachine.STATES,
         'get_fsm_state': lambda: fsm.get_state(),
-        'datetime': datetime
+        'datetime': datetime,
+        'get_notification_count': lambda username=None: get_notification_count(username) if username else 0,
+        'get_unread_notifications': lambda username=None: get_unread_notifications(username) if username else []
     }
 
 @app.route('/dashboard')
@@ -1545,7 +1616,6 @@ def request_access_web():
             user = u
             break
     
-    # Check if user can request access
     if not AccessLogic.can_request_access(user):
         flash('Your user type does not allow access requests', 'error')
         return redirect(url_for('dashboard'))
@@ -1617,7 +1687,6 @@ def admin():
             'occupied_by': availability['occupied_by'] if not availability['available'] else None
         })
     
-    # User classification statistics
     user_stats = {
         'standard_users': len([u for u in users if u.user_type == 'Standard']),
         'authorized_users': len([u for u in users if u.user_type == 'Authorized']),
@@ -1653,6 +1722,14 @@ def approve_request(request_id):
                     if row is not None and col is not None:
                         access_matrix[row][col] = 1
             
+            create_notification(
+                req.username,
+                "✅ Access Request Approved",
+                f"Your access request for {req.facility_name} on {req.date} has been APPROVED. You now have access to this facility.",
+                "approval",
+                req.id
+            )
+            
             flash(f'Request {request_id} approved!', 'success')
             break
     else:
@@ -1669,6 +1746,15 @@ def reject_request(request_id):
         if req.id == request_id and req.status == 'Pending':
             req.status = 'Rejected'
             access_history.append(req)
+            
+            create_notification(
+                req.username,
+                "❌ Access Request Rejected",
+                f"Your access request for {req.facility_name} on {req.date} has been REJECTED. Please contact the admin for more details.",
+                "rejection",
+                req.id
+            )
+            
             flash(f'Request {request_id} rejected', 'info')
             break
     else:
@@ -1744,7 +1830,7 @@ def register():
     return render_template('register.html', program_options=PROGRAM_OPTIONS)
 
 # =====================================================
-# NEW ROUTES FOR FINAL PROJECT FEATURES
+# NEW ROUTES
 # =====================================================
 
 @app.route('/navigation')
@@ -1920,7 +2006,6 @@ def rooms_facilities():
                     has_approved_request = True
                     break
         
-        # Determine access reason based on user type
         access_reason = "No Access"
         if can_access:
             if user.user_type == "Authorized":
@@ -1951,7 +2036,6 @@ def rooms_facilities():
             'time_allotted': '60 minutes' if can_access else 'N/A'
         })
     
-    # User classification summary
     classification_summary = {
         'standard_count': len([u for u in users if u.user_type == 'Standard']),
         'authorized_count': len([u for u in users if u.user_type == 'Authorized']),
@@ -2010,6 +2094,52 @@ def end_usage(usage_index):
         flash('Usage record not found', 'error')
     
     return redirect(url_for('room_usage_view'))
+
+# =====================================================
+# NOTIFICATION ROUTES
+# =====================================================
+
+@app.route('/notifications')
+def view_notifications():
+    """View all notifications for the current user"""
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    user_notifs = get_user_notifications(session['username'])
+    unread_count = get_notification_count(session['username'])
+    
+    return render_template('notifications.html',
+                         notifications=user_notifs,
+                         unread_count=unread_count,
+                         fsm_state=fsm.get_state())
+
+@app.route('/notifications/mark_read/<notification_id>')
+def mark_notification_read_route(notification_id):
+    """Mark a single notification as read"""
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    mark_notification_read(notification_id)
+    return redirect(url_for('view_notifications'))
+
+@app.route('/notifications/mark_all_read')
+def mark_all_notifications_read_route():
+    """Mark all notifications as read for the current user"""
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    count = mark_all_notifications_read(session['username'])
+    flash(f'Marked {count} notifications as read', 'success')
+    return redirect(url_for('view_notifications'))
+
+@app.route('/notifications/unread_count')
+def get_unread_count():
+    """Get unread notification count (AJAX endpoint)"""
+    if 'username' not in session:
+        return jsonify({'count': 0})
+    
+    count = get_notification_count(session['username'])
+    return jsonify({'count': count})
 
 # =====================================================
 # RUN APPLICATION
