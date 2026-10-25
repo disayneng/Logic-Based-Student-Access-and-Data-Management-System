@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}FSM Status - Smart Campus Navigation{% endblock %}
+
+{% block page_title %}Finite State Machine Status{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card animate-in">
+            <div class="card-header">
+                <i class="bi bi-diagram-3 me-2" style="color: var(--accent-purple);"></i>Current State
+            </div>
+            <div class="card-body text-center">
+                <div class="display-1 mb-3">
+                    <span class="badge {% if current_state == 'Access Granted' %}bg-success{% elif current_state == 'Access Denied' %}bg-danger{% elif current_state == 'Navigating' %}bg-info{% elif current_state == 'Monitoring' %}bg-warning{% else %}bg-secondary{% endif %}" 
+                          style="font-size: 2rem; padding: 0.5rem 2rem;">
+                        {{ current_state }}
+                    </span>
+                </div>
+                <p class="text-secondary">
+                    <i class="bi bi-clock me-1"></i>
+                    System is currently in <strong>{{ current_state }}</strong> state
+                </p>
+                <div class="mt-3 p-3" style="background: var(--primary-dark); border-radius: 10px;">
+                    <small class="text-secondary">
+                        <i class="bi bi-info-circle me-1"></i>
+                        FSM has {{ all_states|length }} states: 
+                        {% for state in all_states.values() %}
+                            <span class="badge bg-secondary">{{ state }}</span>
+                        {% endfor %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card animate-in">
+            <div class="card-header">
+                <i class="bi bi-clock-history me-2" style="color: var(--accent-blue);"></i>State History
+            </div>
+            <div class="card-body">
+                {% if history %}
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        {% for state in history %}
+                            <span class="badge bg-secondary p-2 px-3">{{ state }}</span>
+                            {% if not loop.last %}<span class="text-secondary">→</span>{% endif %}
+                        {% endfor %}
+                        <span class="badge bg-primary p-2 px-3">{{ current_state }}</span>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-secondary">
+                            <i class="bi bi-arrow-right me-1"></i>
+                            {{ history|length }} transitions recorded
+                        </small>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-clock display-4 d-block text-secondary mb-2"></i>
+                        <p class="text-secondary">No state history yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-header">
+                <i class="bi bi-table me-2"></i>State Transition Rules
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Current State</th>
+                                <th>Allowed Transitions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-secondary">Idle</span></td>
+                                <td><span class="badge bg-info">Login</span> <span class="badge bg-danger">Exit</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-info">Login</span></td>
+                                <td><span class="badge bg-success">Access Granted</span> <span class="badge bg-danger">Access Denied</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success">Access Granted</span></td>
+                                <td><span class="badge bg-primary">Navigating</span> <span class="badge bg-warning">Monitoring</span> <span class="badge bg-danger">Exit</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-danger">Access Denied</span></td>
+                                <td><span class="badge bg-secondary">Idle</span> <span class="badge bg-danger">Exit</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">Navigating</span></td>
+                                <td><span class="badge bg-warning">Monitoring</span> <span class="badge bg-danger">Exit</span> <span class="badge bg-secondary">Idle</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-warning">Monitoring</span></td>
+                                <td><span class="badge bg-primary">Navigating</span> <span class="badge bg-danger">Exit</span> <span class="badge bg-secondary">Idle</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

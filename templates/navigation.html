@@ -1,71 +1,274 @@
 {% extends "base.html" %}
 
 {% block title %}Campus Navigation - Smart Campus Navigation{% endblock %}
-
 {% block page_title %}Campus Navigation{% endblock %}
 
 {% block content %}
-<div class="row g-4">
-    <div class="col-lg-5">
-        <div class="card animate-in">
-            <div class="card-header">
-                <i class="bi bi-map me-2" style="color: var(--accent-blue);"></i>Find Route
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('find_route') }}">
-                    <div class="mb-3">
-                        <label class="form-label">Start Location</label>
-                        <select class="form-select" name="start" required>
-                            <option value="">Select start...</option>
-                            {% for loc in locations %}
-                            <option value="{{ loc }}">{{ loc }}</option>
+<style>
+    /* Map Container Styling */
+    .map-container {
+        position: relative;
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        background-color: #0a0e1a;
+        aspect-ratio: 1678 / 937; /* must match campus_map.png and the SVG viewBox */
+    }
+    
+    .campus-bg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: fill;
+        pointer-events: none;
+    }
+
+    /* SVG Overlay */
+    .graph-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    /* Default Pathway Lines (Blue) */
+    .graph-overlay .link-line {
+        stroke: #4f8cff;
+        stroke-width: 4;
+        fill: none;
+        stroke-linecap: round;
+        opacity: 0.6;
+    }
+
+    /* Short connector from a room dot to the road */
+    .graph-overlay .link-line.stub {
+        stroke-width: 2.5;
+        opacity: 0.45;
+    }
+
+    /* Highlighted Optimal Route (Yellow) */
+    .graph-overlay .link-line.highlight {
+        stroke: #ffeb3b; 
+        stroke-width: 6;
+        stroke-dasharray: 10, 6;
+        filter: drop-shadow(0 0 6px #ffeb3b);
+        opacity: 1;
+    }
+
+    /* Real Locations (Red Dots) */
+    .graph-overlay .node-circle {
+        fill: #ff3b3b; 
+        stroke: #ffffff;
+        stroke-width: 2;
+    }
+
+    /* Endpoints (Green for Start, Red for End) */
+    .graph-overlay .node-circle.endpoint {
+        fill: #2ecc71; 
+        stroke: #ffffff;
+        stroke-width: 3;
+    }
+
+    .graph-overlay .node-circle.endpoint.dest {
+        fill: #e74c3c; 
+    }
+    
+    /* Search Input Styling */
+    .search-container {
+        background: var(--primary-card);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .form-control {
+        background-color: var(--primary-dark);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px;
+    }
+    .form-control:focus {
+        background-color: var(--primary-dark);
+        color: var(--text-primary);
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 0.25rem rgba(79, 140, 255, 0.25);
+    }
+</style>
+
+<!-- 1. SEARCH BAR SECTION -->
+<div class="row justify-content-center mb-4">
+    <div class="col-lg-12">
+        <div class="search-container">
+            <h5 class="mb-3 text-primary"><i class="bi bi-search me-2"></i>Where do you want to go?</h5>
+            <form method="POST" action="{{ url_for('find_route') }}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-secondary" style="font-size: 0.85rem;">Start Location</label>
+                        <select class="form-control form-select" name="start" required>
+                            <option value="" disabled {% if not start %}selected{% endif %}>Select start location...</option>
+                            {% for loc in locations|sort %}
+                                {% if not loc.startswith('_W') %}
+                                <option value="{{ loc }}" {% if loc == start %}selected{% endif %}>{{ loc }}</option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">End Location</label>
-                        <select class="form-select" name="end" required>
-                            <option value="">Select destination...</option>
-                            {% for loc in locations %}
-                            <option value="{{ loc }}">{{ loc }}</option>
+                    <div class="col-md-4">
+                        <label class="form-label text-secondary" style="font-size: 0.85rem;">Destination</label>
+                        <select class="form-control form-select" name="end" required>
+                            <option value="" disabled {% if not end %}selected{% endif %}>Select destination...</option>
+                            {% for loc in locations|sort %}
+                                {% if not loc.startswith('_W') %}
+                                <option value="{{ loc }}" {% if loc == end %}selected{% endif %}>{{ loc }}</option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-arrow-right-circle me-2"></i> Find Route
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-7">
-        <div class="card animate-in">
-            <div class="card-header">
-                <i class="bi bi-diagram-2 me-2" style="color: var(--accent-purple);"></i>Campus Map
-            </div>
-            <div class="card-body">
-                <div style="background: var(--primary-dark); border-radius: 10px; padding: 20px; min-height: 300px;">
-                    <div style="position: relative; width: 100%; height: 300px;">
-                        <!-- Simple visual graph representation -->
-                        <div class="row g-1" style="height: 100%;">
-                            <div class="col-12 h-100 d-flex flex-wrap align-content-start gap-2">
-                                {% for loc in locations %}
-                                <span class="badge bg-secondary p-2">
-                                    <i class="bi bi-geo-alt me-1"></i> {{ loc }}
-                                </span>
-                                {% endfor %}
-                            </div>
-                        </div>
+                    <div class="col-md-4 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1" style="padding: 12px;">
+                            <i class="bi bi-arrow-right-circle me-1"></i> Route
+                        </button>
+                        <a href="{{ url_for('navigation') }}" class="btn btn-outline-secondary flex-grow-1" style="padding: 12px;" title="Clear the selection and the route">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                        </a>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <small class="text-secondary">
-                        <i class="bi bi-info-circle me-1"></i>
-                        {{ locations|length }} locations available. Select start and end to find the shortest path.
-                    </small>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2. ROUTE RESULT SECTION -->
+{% if result %}
+<div class="row justify-content-center mb-4">
+    <div class="col-lg-12">
+        <div class="card animate-in border-success" style="background: var(--primary-card);">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-check-circle-fill me-2"></i>Optimal Route Found</span>
+                <span class="badge bg-light text-success fs-6"><i class="bi bi-signpost-split me-1"></i> {{ result.distance }}</span>
+            </div>
+            <div class="card-body">
+                <div class="p-3" style="background: var(--primary-dark); border-radius: 10px;">
+                    <h6 class="fw-bold text-light mb-3">From <span class="text-primary">{{ start }}</span> to <span class="text-primary">{{ end }}</span></h6>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        {% for loc in result.path %}
+                            {% if not loc.startswith('_W') %}
+                                <span class="badge {% if loc == start or loc == end %}bg-success{% else %}bg-primary{% endif %} p-2 px-3">{{ loc }}</span>
+                                {% if not loop.last %}<span class="text-secondary"><i class="bi bi-arrow-right"></i></span>{% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
+
+<!-- 3. MAP SECTION -->
+<div class="row justify-content-center">
+    <div class="col-lg-12">
+        <div class="card animate-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-map me-2" style="color: var(--accent-blue);"></i>Interactive Campus Map</span>
+                <span class="badge bg-secondary">Graph Nodes Loaded</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="map-container" id="map-wrapper">
+                    <!-- Background Image -->
+                    <img src="{{ url_for('static', filename='images/campus_map.png') }}" class="campus-bg" id="map-image">
+                    <!-- SVG Overlay for Graph -->
+                    <svg class="graph-overlay" id="graph-svg" viewBox="0 0 1678 937" preserveAspectRatio="xMidYMid meet"></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data passed from Python
+    const nodesData = {{ nodes_json | safe }};
+    const edgesData = {{ edges_json | safe }};
+    const shortestPath = {{ result.path | tojson if result else '[]' | safe }};
+    const pathEdges = {{ result.edges | tojson if result and result.edges else '[]' | safe }};
+
+    const svg = document.getElementById('graph-svg');
+    const svgNS = "http://www.w3.org/2000/svg";
+    
+    // Look up coordinates by node ID
+    let vertexMap = {};
+    nodesData.forEach(v => vertexMap[v.id] = v);
+
+    function drawMap() {
+        svg.innerHTML = '';
+
+        // 1. ALL PATHWAYS (blue). Room-to-road connectors are drawn thinner.
+        edgesData.forEach(edge => {
+            const v1 = vertexMap[edge.source];
+            const v2 = vertexMap[edge.target];
+            if (!v1 || !v2) return;
+
+            const line = document.createElementNS(svgNS, 'line');
+            line.setAttribute('x1', v1.x);
+            line.setAttribute('y1', v1.y);
+            line.setAttribute('x2', v2.x);
+            line.setAttribute('y2', v2.y);
+            const isStub = !edge.source.startsWith('_W') || !edge.target.startsWith('_W');
+            line.setAttribute('class', isStub ? 'link-line stub' : 'link-line');
+            svg.appendChild(line);
+        });
+
+        // 2. SHORTEST PATH (yellow)
+        if (pathEdges.length > 0) {
+            pathEdges.forEach(edge => {
+                const v1 = vertexMap[edge.source];
+                const v2 = vertexMap[edge.target];
+                if (!v1 || !v2) return;
+
+                const line = document.createElementNS(svgNS, 'line');
+                line.setAttribute('x1', v1.x);
+                line.setAttribute('y1', v1.y);
+                line.setAttribute('x2', v2.x);
+                line.setAttribute('y2', v2.y);
+                line.setAttribute('class', 'link-line highlight');
+                svg.appendChild(line);
+            });
+        }
+
+        // 3. ROOMS / FACILITIES (red dots, hidden waypoints skipped)
+        nodesData.forEach(v => {
+            if (v.id.startsWith('_W')) return;
+
+            let isStart = shortestPath.length > 0 && shortestPath[0] === v.id;
+            let isEnd = shortestPath.length > 0 && shortestPath[shortestPath.length - 1] === v.id;
+
+            const circle = document.createElementNS(svgNS, 'circle');
+            circle.setAttribute('cx', v.x);
+            circle.setAttribute('cy', v.y);
+            circle.setAttribute('r', (isStart || isEnd) ? 10 : 6);
+            
+            let circleClass = 'node-circle';
+            if (isStart) circleClass += ' endpoint';
+            else if (isEnd) circleClass += ' endpoint dest';
+            
+            circle.setAttribute('class', circleClass);
+            
+            const title = document.createElementNS(svgNS, 'title');
+            title.textContent = v.id;
+            circle.appendChild(title);
+            
+            svg.appendChild(circle);
+        });
+    }
+
+    drawMap();
+</script>
 {% endblock %}

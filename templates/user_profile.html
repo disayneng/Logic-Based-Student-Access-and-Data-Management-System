@@ -46,20 +46,24 @@
                             {{ user.school_id }}
                         </div>
                     </div>
+                    
+                    <!-- Password Section -->
                     <div class="col-md-6">
                         <label class="text-secondary d-block mb-1" style="font-size: 0.8rem;">
                             <i class="bi bi-key me-1"></i> Password
                         </label>
-                        <div class="p-2" style="background: var(--primary-dark); border-radius: 8px;">
-                            <span class="text-secondary">••••••••</span>
-                            <button class="btn btn-sm btn-outline-secondary ms-2" onclick="togglePassword()">
+                        <div class="p-2 d-flex align-items-center justify-content-between" style="background: var(--primary-dark); border-radius: 8px;">
+                            <span id="passwordDisplay" class="text-secondary font-monospace">
+                                ••••••••
+                            </span>
+                            <button class="btn btn-sm btn-outline-secondary border-0" onclick="togglePassword()">
                                 <i class="bi bi-eye" id="passwordIcon"></i>
                             </button>
-                            <span class="d-none" id="passwordText" style="font-size: 0.9rem; word-break: break-all;">
-                                {{ user.password }}
-                            </span>
                         </div>
+                        <!-- Hidden field to hold the real password -->
+                        <input type="hidden" id="realPassword" value="{{ user.password }}">
                     </div>
+                    
                     <div class="col-md-6">
                         <label class="text-secondary d-block mb-1" style="font-size: 0.8rem;">
                             <i class="bi bi-graph-up me-1"></i> Access Count
@@ -117,15 +121,21 @@
 
 <script>
 function togglePassword() {
-    const passwordText = document.getElementById('passwordText');
+    const display = document.getElementById('passwordDisplay');
     const icon = document.getElementById('passwordIcon');
+    const realPassword = document.getElementById('realPassword').value;
     
-    if (passwordText.classList.contains('d-none')) {
-        passwordText.classList.remove('d-none');
+    // Check if current display is the dots
+    if (display.textContent.trim() === '••••••••') {
+        display.textContent = realPassword;
+        display.classList.remove('text-secondary');
+        display.classList.add('text-dark'); 
         icon.classList.remove('bi-eye');
         icon.classList.add('bi-eye-slash');
     } else {
-        passwordText.classList.add('d-none');
+        display.textContent = '••••••••';
+        display.classList.remove('text-dark');
+        display.classList.add('text-secondary');
         icon.classList.remove('bi-eye-slash');
         icon.classList.add('bi-eye');
     }

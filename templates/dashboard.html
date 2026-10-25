@@ -45,11 +45,11 @@
     </div>
 </div>
 
-<!-- Quick Actions -->
+<!-- Quick Actions & FSM State -->
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="card animate-in">
-            <div class="card-body">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <a href="{{ url_for('check_access_web') }}" class="btn btn-primary">
                         <i class="bi bi-shield-lock me-2"></i> Check Access
@@ -61,14 +61,37 @@
                         <i class="bi bi-bell me-2"></i> Notifications
                         {% set unread_count = get_notification_count(session['username']) if session['username'] else 0 %}
                         {% if unread_count > 0 %}
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
-                                  style="font-size: 0.6rem; padding: 0.25rem 0.5rem;">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                 {{ unread_count }}
-                                <span class="visually-hidden">unread notifications</span>
                             </span>
                         {% endif %}
                     </a>
                 </div>
+                
+                <!-- FSM State Display -->
+                <div class="d-flex align-items-center gap-2 border-start border-secondary ps-3">
+                    <small class="text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">FSM State</small>
+                    <span class="badge {% if fsm_state == 'Access Granted' %}bg-success{% elif fsm_state == 'Access Denied' %}bg-danger{% elif fsm_state == 'Navigating' %}bg-info{% elif fsm_state == 'Monitoring' %}bg-warning{% else %}bg-secondary{% endif %} p-2 px-3">
+                        <i class="bi bi-diagram-3 me-1"></i> {{ fsm_state }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graph Stats (Paths Removed) -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card animate-in">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon blue" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">Campus Locations</h6>
+                </div>
+                <a href="{{ url_for('navigation') }}" class="btn btn-sm btn-outline-primary ms-auto">Navigate</a>
             </div>
         </div>
     </div>
@@ -95,7 +118,6 @@
                                 <th>Status</th>
                                 <th>Access</th>
                                 <th>Time Allotment</th>
-                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -141,23 +163,6 @@
                                         <span class="badge bg-warning">Waiting</span>
                                     {% else %}
                                         <span class="badge bg-secondary">N/A</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if room.can_access and room.available %}
-                                        <a href="{{ url_for('check_access_web') }}?facility={{ room.room_name }}" 
-                                           class="btn btn-sm btn-success">
-                                            <i class="bi bi-clock me-1"></i> Set Time
-                                        </a>
-                                    {% elif room.can_access and not room.available %}
-                                        <button class="btn btn-sm btn-secondary" disabled>
-                                            <i class="bi bi-clock me-1"></i> Occupied
-                                        </button>
-                                    {% else %}
-                                        <a href="{{ url_for('request_access_web') }}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-pencil me-1"></i> Request
-                                        </a>
                                     {% endif %}
                                 </td>
                             </tr>

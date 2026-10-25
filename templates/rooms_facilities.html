@@ -10,7 +10,7 @@
     <div class="col-12">
         <div class="card animate-in">
             <div class="card-header">
-                <i class="bi bi-laptop me-2"></i> Computer Laboratories
+                <i class="bi bi-laptop me-2"></i> CS Computer Lectures and Laboratories
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -21,11 +21,11 @@
                                 <th>Program</th>
                                 <th>Status</th>
                                 <th>Access</th>
-                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for room in room_status if 'COMLAB' in room.room_id or 'COMLEC' in room.room_id %}
+                            <!-- FIXED: Updated to include CSLAB and CSLEC -->
+                            {% for room in room_status if 'COMLAB' in room.room_name or 'COMLEC' in room.room_name or 'CSLAB' in room.room_id or 'CSLEC' in room.room_id %}
                             <tr>
                                 <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
                                 <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
@@ -42,11 +42,6 @@
                                     {% else %}
                                     <span class="badge bg-danger">Restricted</span>
                                     {% endif %}
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
-                                        <i class="bi bi-shield-check"></i> Check Access
-                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -72,11 +67,11 @@
                                 <th>Program</th>
                                 <th>Status</th>
                                 <th>Access</th>
-                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for room in room_status if 'CTE' in room.room_id %}
+                            <!-- FIXED: Updated to include CTE in room_name as well -->
+                            {% for room in room_status if 'CTE' in room.room_id or 'CTE' in room.room_name %}
                             <tr>
                                 <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
                                 <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
@@ -93,11 +88,6 @@
                                     {% else %}
                                     <span class="badge bg-danger">Restricted</span>
                                     {% endif %}
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
-                                        <i class="bi bi-shield-check"></i> Check Access
-                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -123,11 +113,11 @@
                                 <th>Program</th>
                                 <th>Status</th>
                                 <th>Access</th>
-                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for room in room_status if 'HM' in room.room_id %}
+                            <!-- FIXED: Updated to include HM in room_name -->
+                            {% for room in room_status if 'HM' in room.room_id or 'HM' in room.room_name %}
                             <tr>
                                 <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
                                 <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
@@ -144,11 +134,6 @@
                                     {% else %}
                                     <span class="badge bg-danger">Restricted</span>
                                     {% endif %}
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
-                                        <i class="bi bi-shield-check"></i> Check Access
-                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -174,11 +159,11 @@
                                 <th>Program</th>
                                 <th>Status</th>
                                 <th>Access</th>
-                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for room in room_status if 'ES' in room.room_id %}
+                            <!-- FIXED: Updated to include ES in room_name -->
+                            {% for room in room_status if 'ES' in room.room_id or 'ES ROOM' in room.room_name %}
                             <tr>
                                 <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
                                 <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
@@ -195,11 +180,6 @@
                                     {% else %}
                                     <span class="badge bg-danger">Restricted</span>
                                     {% endif %}
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
-                                        <i class="bi bi-shield-check"></i> Check Access
-                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -225,11 +205,11 @@
                                 <th>Program</th>
                                 <th>Status</th>
                                 <th>Access</th>
-                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for room in room_status if not ('COMLAB' in room.room_id or 'COMLEC' in room.room_id or 'CTE' in room.room_id or 'HM' in room.room_id or 'ES' in room.room_id) %}
+                            <!-- FIXED: Used rejectattr to exclude categories properly -->
+                            {% for room in room_status if not ('COMLAB' in room.room_name or 'COMLEC' in room.room_name or 'CSLAB' in room.room_id or 'CSLEC' in room.room_id or 'CTE' in room.room_id or 'CTE' in room.room_name or 'HM' in room.room_id or 'HM' in room.room_name or 'ES' in room.room_id or 'ES ROOM' in room.room_name) %}
                             <tr>
                                 <td><strong>{{ room.room_number }}</strong><br><small>{{ room.room_name }}</small></td>
                                 <td><span class="badge bg-info">{{ room.program or 'General' }}</span></td>
@@ -246,11 +226,6 @@
                                     {% else %}
                                     <span class="badge bg-danger">Restricted</span>
                                     {% endif %}
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" onclick="checkAccess('{{ room.room_name }}')">
-                                        <i class="bi bi-shield-check"></i> Check Access
-                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
