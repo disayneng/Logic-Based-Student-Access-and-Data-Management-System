@@ -19,8 +19,9 @@
                         </label>
                         <select class="form-select" id="facility" name="facility" required>
                             <option value="">Choose a facility...</option>
-                            {% for facility in facilities %}
-                            <option value="{{ facility }}">{{ facility }}</option>
+                            <!-- Loop through ROOM_DATA instead of the short facilities set -->
+                            {% for room in ROOM_DATA %}
+                            <option value="{{ room.room_name }}">{{ room.room_name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -82,11 +83,6 @@
                         <p class="text-secondary">Select a facility and click "Check Access"</p>
                     </div>
                 {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-                </div>
             </div>
         </div>
     </div>

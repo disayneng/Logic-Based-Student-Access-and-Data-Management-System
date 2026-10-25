@@ -230,12 +230,6 @@ class Vertex:
 
 
 class CampusGraph:
-    """
-    All coordinates are in the pixel space of campus_map.png (1678 x 937).
-    The SVG overlay in navigation.html uses viewBox="0 0 1678 937" so
-    dots/lines land exactly on the picture.
-    """
-
     def __init__(self, size=400):
         self.size = size
         self.adj_matrix = [[0] * size for _ in range(size)]
@@ -243,9 +237,6 @@ class CampusGraph:
         self.vertex_map = {}
         self._initialize_graph()
 
-    # ---------------------------------------------------------------
-    # basic graph operations
-    # ---------------------------------------------------------------
     def add_vertex(self, v):
         for i in range(self.size):
             if self.vertices[i] is None:
@@ -263,7 +254,6 @@ class CampusGraph:
 
     @property
     def adjacency_list(self):
-        """name -> list of neighbour names (rooms + waypoints)."""
         adj = {}
         for i, v in enumerate(self.vertices):
             if v is None:
@@ -349,12 +339,8 @@ class CampusGraph:
             'edges': path_edges
         }
 
-    # ---------------------------------------------------------------
-    # geometry helpers
-    # ---------------------------------------------------------------
     @staticmethod
     def _closest_point(p, a, b):
-        """Closest point to p on segment a-b (clamped)."""
         ax, ay = a
         bx, by = b
         dx, dy = bx - ax, by - ay
@@ -367,7 +353,6 @@ class CampusGraph:
 
     @staticmethod
     def _intersection(a, b, c, d):
-        """Intersection of two axis-aligned segments (None otherwise)."""
         a_horiz, a_vert = a[1] == b[1], a[0] == b[0]
         c_horiz, c_vert = c[1] == d[1], c[0] == d[0]
         if a_horiz and c_vert:
@@ -382,11 +367,7 @@ class CampusGraph:
             return (x, y)
         return None
 
-    # ---------------------------------------------------------------
-    # build the campus: rooms (dot under each label) + real road network
-    # ---------------------------------------------------------------
     def _initialize_graph(self):
-        # 1. Rooms: each dot sits just BELOW the label text on the map.
         rooms = [
             ("COMLEC 1", 44, 60), ("COMLAB 1", 118, 60), ("NEW ADMIN BUILDING", 271, 108),
             ("LIBRARY", 525, 65), ("FACULTY ROOM", 505, 133), ("CSM OFFICE", 517, 202),
@@ -413,28 +394,27 @@ class CampusGraph:
         for name, x, y in rooms:
             self.add_vertex(Vertex(name, x, y))
 
-        # 2. Roads: polylines that follow the grey pathways on the picture.
         roads = [
-            [(75, 20), (75, 930)],                                   # main road (left)
-            [(75, 95), (432, 95), (525, 95)],                        # top road by New Admin
-            [(432, 95), (432, 816)],                                 # long vertical road
+            [(75, 20), (75, 930)],
+            [(75, 95), (432, 95), (525, 95)],
+            [(432, 95), (432, 816)],
             [(75, 198), (432, 198)],
             [(75, 573), (432, 573)],
-            [(432, 435), (767, 435)],                                # below CS lab block
+            [(432, 435), (767, 435)],
             [(665, 150), (665, 435)],
             [(665, 272), (930, 272)],
             [(838, 150), (838, 272)],
-            [(767, 272), (767, 632)],                                # CTE lab road
-            [(930, 0), (930, 410), (1085, 410)],                     # north road -> fishpond
-            [(1085, 338), (1392, 338), (1392, 487), (1085, 487), (1085, 338)],  # pond border
+            [(767, 272), (767, 632)],
+            [(930, 0), (930, 410), (1085, 410)],
+            [(1085, 338), (1392, 338), (1392, 487), (1085, 487), (1085, 338)],
             [(1392, 487), (1545, 487)],
-            [(1392, 410), (1545, 410), (1545, 778)],                 # east road
-            [(432, 632), (1138, 632)],                               # above Admin / HM
+            [(1392, 410), (1545, 410), (1545, 778)],
+            [(432, 632), (1138, 632)],
             [(933, 632), (933, 778)],
             [(1138, 487), (1138, 778)],
             [(1280, 487), (1280, 778)],
-            [(1280, 648), (1545, 648)],                              # between Oval and S&T
-            [(432, 816), (850, 816), (890, 778), (1545, 778)],       # bottom road
+            [(1280, 648), (1545, 648)],
+            [(432, 816), (850, 816), (890, 778), (1545, 778)],
         ]
 
         segs = []
@@ -443,7 +423,6 @@ class CampusGraph:
                 segs.append((a, b))
         pts_on = [{a, b} for a, b in segs]
 
-        # road/road crossings become waypoints
         for i in range(len(segs)):
             for j in range(i + 1, len(segs)):
                 p = self._intersection(*segs[i], *segs[j])
@@ -451,7 +430,6 @@ class CampusGraph:
                     pts_on[i].add(p)
                     pts_on[j].add(p)
 
-        # each room is attached to the closest point on a road (short stub)
         room_attach = []
         for name, x, y in rooms:
             best = None
@@ -464,7 +442,6 @@ class CampusGraph:
             pts_on[seg_i].add(cp)
             room_attach.append((name, cp))
 
-        # create invisible waypoints (names start with _W)
         wp_name = {}
         for pts in pts_on:
             for p in pts:
@@ -472,13 +449,11 @@ class CampusGraph:
                     wp_name[p] = f"_W{len(wp_name) + 1}"
                     self.add_vertex(Vertex(wp_name[p], p[0], p[1]))
 
-        # connect waypoints along each road segment
         for (a, b), pts in zip(segs, pts_on):
             ordered = sorted(pts, key=lambda p: math.hypot(p[0] - a[0], p[1] - a[1]))
             for p, q in zip(ordered, ordered[1:]):
                 self.add_edge(wp_name[p], wp_name[q])
 
-        # connect each room to its road waypoint
         for name, cp in room_attach:
             self.add_edge(name, wp_name[cp])
 
@@ -533,42 +508,37 @@ class CampusTree:
         self._build_tree()
     
     def _build_tree(self):
-        depts = {
-            "CCS": self.root.add_child(TreeNode("College of Computer Studies")),
-            "COE": self.root.add_child(TreeNode("College of Engineering")),
-            "CBM": self.root.add_child(TreeNode("College of Business Management")),
-        }
+        csm = self.root.add_child(TreeNode("College of Science and Management"))
+        cte = self.root.add_child(TreeNode("College of Teacher Education"))
+
+        bscs = csm.add_child(TreeNode("BS Computer Science"))
+        bses = csm.add_child(TreeNode("BS Environmental Science"))
+        bshm = csm.add_child(TreeNode("BS Hospitality Management"))
         
-        ccs = depts["CCS"]
-        ccs.add_child(TreeNode("Computer Science"))
-        ccs.add_child(TreeNode("Information Technology"))
-        ccs.add_child(TreeNode("Computer Engineering"))
-        
-        coe = depts["COE"]
-        coe.add_child(TreeNode("Mechanical Engineering"))
-        coe.add_child(TreeNode("Electrical Engineering"))
-        coe.add_child(TreeNode("Civil Engineering"))
-        
-        cbm = depts["CBM"]
-        cbm.add_child(TreeNode("Business Administration"))
-        cbm.add_child(TreeNode("Marketing"))
-        cbm.add_child(TreeNode("Finance"))
-        
+        beed = cte.add_child(TreeNode("Bachelor of Elementary Education"))
+        bsed = cte.add_child(TreeNode("Bachelor of Secondary Education"))
+        btled = cte.add_child(TreeNode("Bachelor of Technology and Livelihood Education"))
+
         rooms = [
-            ("Computer Science", "CS Lab 1"),
-            ("Computer Science", "CS Lab 2"),
-            ("Computer Science", "CS Lecture Room"),
-            ("Information Technology", "IT Lab"),
-            ("Information Technology", "IT Lecture Room"),
-            ("Computer Engineering", "CE Lab"),
-            ("Mechanical Engineering", "ME Workshop"),
-            ("Mechanical Engineering", "ME Lab"),
-            ("Electrical Engineering", "EE Lab"),
-            ("Civil Engineering", "CE Studio"),
-            ("Business Administration", "BA Classroom 1"),
-            ("Business Administration", "BA Classroom 2"),
-            ("Marketing", "Marketing Lab"),
-            ("Finance", "Finance Lab"),
+            ("BS Computer Science", "COMLAB 1"),
+            ("BS Computer Science", "COMLAB 2"),
+            ("BS Computer Science", "COMLAB 3"),
+            ("BS Computer Science", "COMLAB 4"),
+            ("BS Computer Science", "CSM OFFICE"),
+            ("BS Environmental Science", "S&T BUILDING"),
+            ("BS Environmental Science", "HATCHERY"),
+            ("BS Environmental Science", "FISHPOND"),
+            ("BS Hospitality Management", "HOT KITCHEN"),
+            ("BS Hospitality Management", "COLD KITCHEN"),
+            ("BS Hospitality Management", "ROOM 1 (HM)"),
+            ("BS Hospitality Management", "ROOM 2 (HM)"),
+            ("Bachelor of Elementary Education", "SPEECH LAB"),
+            ("Bachelor of Elementary Education", "ROOM 1 (CTE)"),
+            ("Bachelor of Elementary Education", "ROOM 2 (CTE)"),
+            ("Bachelor of Secondary Education", "CTE LAB 2"),
+            ("Bachelor of Secondary Education", "CTE LAB 3"),
+            ("Bachelor of Technology and Livelihood Education", "CTE LAB 4"),
+            ("Bachelor of Technology and Livelihood Education", "CTE OFFICE"),
         ]
         
         for dept_name, room_name in rooms:
@@ -733,6 +703,7 @@ USER_DATA = [
     {"school_id": "2026-0003", "username": "maria.santos", "role": "Faculty", "full_name": "Maria Santos", "password": "Faculty@123", "program": ""},
     {"school_id": "2026-0005", "username": "anna.garcia", "role": "Staff", "full_name": "Anna Garcia", "password": "Staff@123", "program": ""},
     {"school_id": "2026-0007", "username": "carlos.mendoza", "role": "Chairperson", "full_name": "Carlos Mendoza", "password": "Chair@123", "program": "", "chairperson_college": "COLLEGE OF SCIENCE AND MANAGEMENT"},
+    {"school_id": "2026-0008", "username": "ela.cruz", "role": "Chairperson", "full_name": "Elaine Cruz", "password": "Chair1@123", "program": "", "chairperson_college": "COLLEGE OF TEACHER EDUCATION"},
 ]
 
 VISITOR_DATA = [
@@ -817,8 +788,6 @@ chairpersons = set()
 visitors = set()
 authorized_users = set()
 restricted_users = set()
-
-facilities_set = {"LIBRARY", "COMLAB 1", "COMLAB 2", "COMLAB 3", "COMLAB 4", "S&T LAB 1", "S&T LAB 2", "FACULTY OFFICE"}
 
 # =====================================================
 # USER STORAGE
@@ -1234,8 +1203,11 @@ def check_access(username, facility_name, duration_minutes=60):
             break
     if not user:
         return False, "User not found", None
-    if facility_name not in facilities_set:
+    
+    valid_rooms = [room['room_name'] for room in ROOM_DATA]
+    if facility_name not in valid_rooms:
         return False, "Facility does not exist", None
+        
     if user.user_type == "Restricted":
         if facility_name not in user.restricted_rooms:
             return False, "Access Denied: Restricted user cannot access this facility", None
@@ -1546,7 +1518,7 @@ def check_access_web():
         if usage:
             usage_info = usage.to_dict()
     return render_template('check_access.html', 
-                         facilities=facilities_set,
+                         ROOM_DATA=ROOM_DATA,
                          result=result,
                          usage_info=usage_info,
                          selected_facility=selected_facility,
@@ -1579,24 +1551,38 @@ def request_access_web():
     if not AccessLogic.can_request_access(user):
         flash('Your user type does not allow access requests', 'error')
         return redirect(url_for('dashboard'))
-    all_facilities = []
-    for room in ROOM_DATA:
-        if room['room_name'] not in all_facilities:
-            all_facilities.append(room['room_name'])
+    
     if request.method == 'POST':
-        facility = request.form.get('facility')
+        facility_value = request.form.get('facility')
+        
+        # Split "COMLAB 1|BSCS" into facility_name and program
+        if '|' in facility_value:
+            facility_name, req_program = facility_value.split('|')
+        else:
+            facility_name = facility_value
+            req_program = 'General'
+            
         date_str = request.form.get('date')
         start_hour = int(request.form.get('start_hour'))
         end_hour = int(request.form.get('end_hour'))
         purpose = request.form.get('purpose')
+        
         if start_hour >= end_hour:
             flash('End time must be after start time', 'error')
-            return render_template('request_access.html', facilities=all_facilities)
-        req = AccessRequest(session['username'], facility, date_str, start_hour, end_hour, purpose)
+            return render_template('request_access.html', 
+                                 ROOM_DATA=ROOM_DATA, 
+                                 room_program_mapping=ROOM_PROGRAM_MAPPING, 
+                                 fsm_state=fsm.get_state())
+            
+        req = AccessRequest(session['username'], facility_name, date_str, start_hour, end_hour, purpose)
         access_requests.append(req)
         flash(f'Request submitted! ID: {req.id}', 'success')
         return redirect(url_for('dashboard'))
-    return render_template('request_access.html', facilities=all_facilities)
+        
+    return render_template('request_access.html', 
+                         ROOM_DATA=ROOM_DATA, 
+                         room_program_mapping=ROOM_PROGRAM_MAPPING,
+                         fsm_state=fsm.get_state())
 
 @app.route('/admin')
 def admin():
@@ -1610,8 +1596,29 @@ def admin():
     if user and user.role not in ['Faculty', 'Chairperson', 'Staff']:
         flash('Admin access required', 'error')
         return redirect(url_for('dashboard'))
-    pending = [req for req in access_requests if req.status == 'Pending']
-    approved = [req for req in access_requests if req.status == 'Approved']
+    
+    if user.role == 'Chairperson':
+        if user.chairperson_college == 'COLLEGE OF SCIENCE AND MANAGEMENT':
+            allowed_programs = ['BSCS', 'BSES', 'BSHM', 'CSM']
+        elif user.chairperson_college == 'COLLEGE OF TEACHER EDUCATION':
+            allowed_programs = ['BEED', 'BSED-MATH', 'BTLED-HE', 'CTE']
+        else:
+            allowed_programs = []
+            
+        pending = []
+        approved = []
+        for req in access_requests:
+            req_program = ROOM_PROGRAM_MAPPING.get(req.facility_name, 'General')
+            
+            if req_program in allowed_programs:
+                if req.status == 'Pending':
+                    pending.append(req)
+                elif req.status == 'Approved':
+                    approved.append(req)
+    else:
+        pending = [req for req in access_requests if req.status == 'Pending']
+        approved = [req for req in access_requests if req.status == 'Approved']
+
     approved_by_program = {}
     for req in approved:
         req_user = None
@@ -1625,6 +1632,7 @@ def admin():
         approved_by_program[program]['count'] += 1
         if req_user and req_user.username not in approved_by_program[program]['users']:
             approved_by_program[program]['users'].append(req_user.username)
+            
     room_usage_by_program = []
     for room in ROOM_DATA:
         availability = AccessLogic.get_room_availability(room['room_name'])
@@ -1772,7 +1780,6 @@ def navigation():
     
     locations = list(campus_graph.vertex_map.keys())
     
-    # Build nodes and edges data for the JavaScript Canvas
     nodes_data = []
     for loc in locations:
         idx = campus_graph.vertex_map[loc]

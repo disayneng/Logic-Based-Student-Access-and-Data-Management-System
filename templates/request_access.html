@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block title %}Request Access - Smart Campus Navigation{% endblock %}
-
 {% block page_title %}Request Access{% endblock %}
 
 {% block content %}
@@ -22,25 +21,25 @@
                 </div>
 
                 <form method="POST" action="{{ url_for('request_access_web') }}">
-                    <!-- Facility Selection -->
                     <div class="mb-3">
                         <label for="facility" class="form-label">Select Room/Facility</label>
                         <select class="form-select" id="facility" name="facility" required>
                             <option value="">Select a room or facility...</option>
-                            {% for facility in facilities %}
-                            <option value="{{ facility }}">{{ facility }}</option>
+                            {% for room in ROOM_DATA %}
+                                <!-- Diri nato kuhaon ang program gikan sa ROOM_PROGRAM_MAPPING -->
+                                <option value="{{ room.room_name }}|{{ room_program_mapping.get(room.room_name, 'General') }}">
+                                    {{ room.room_name }}
+                                </option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <!-- Date -->
                     <div class="mb-3">
                         <label for="date" class="form-label">Date</label>
                         <input type="date" class="form-control" id="date" name="date" 
                                min="{{ datetime.now().strftime('%Y-%m-%d') }}" required>
                     </div>
 
-                    <!-- Time Range -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="start_hour" class="form-label">Start Time</label>
@@ -60,37 +59,11 @@
                         </div>
                     </div>
 
-                    <!-- Purpose -->
                     <div class="mb-3">
                         <label for="purpose" class="form-label">Purpose</label>
                         <textarea class="form-control" id="purpose" name="purpose" rows="3" 
                                   placeholder="Please describe the purpose of your access request..." required></textarea>
                     </div>
-
-                    <!-- Request Type -->
-                    {% if session.user_type in ['Chairperson', 'Faculty', 'Staff'] %}
-                    <div class="mb-3">
-                        <label class="form-label">Request Type</label>
-                        <div class="card" style="background: var(--primary-dark); border: 1px solid var(--border-color);">
-                            <div class="card-body">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="request_type" id="type_individual" value="individual" checked>
-                                    <label class="form-check-label" for="type_individual">
-                                        <i class="bi bi-person me-1"></i> Individual Access
-                                        <small class="d-block text-secondary">Access for your personal use</small>
-                                    </label>
-                                </div>
-                                <div class="form-check mt-2">
-                                    <input class="form-check-input" type="radio" name="request_type" id="type_class" value="class">
-                                    <label class="form-check-label" for="type_class">
-                                        <i class="bi bi-people me-1"></i> Class/Group Access
-                                        <small class="d-block text-secondary">Access for a class or group activity</small>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
 
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="bi bi-send me-2"></i> Submit Request
@@ -157,7 +130,6 @@
 </div>
 
 <script>
-    // Set default date to today
     document.addEventListener('DOMContentLoaded', function() {
         const dateInput = document.getElementById('date');
         if (dateInput) {
